@@ -21,6 +21,7 @@ namespace AndroidIntelliTool
         public Form1(string[] args)
         {
             InitializeComponent();
+            this.Icon = new Icon("Icon.ico");
             this.Load += async (s, e) => await Form1_Load(s, e, args);
         }
 
@@ -51,6 +52,9 @@ namespace AndroidIntelliTool
             settingsToolStripMenuItem.Click += (s, ev) => OpenSettings();
 
             // File Explorer Tab
+            driveComboBox.SelectedIndexChanged += (s, ev) => driveComboBox_SelectedIndexChanged(s, ev);
+            localPathTextBox.KeyDown += (s, ev) => localPathTextBox_KeyDown(s, ev);
+            localUpButton.Click += (s, ev) => localUpButton_Click(s, ev);
             refreshExplorerButton.Click += async (s, ev) => await RefreshFileExplorer();
             localFileListView.DoubleClick += (s, ev) => NavigateLocalDirectory();
             deviceFileListView.DoubleClick += async (s, ev) => await NavigateDeviceDirectory();
@@ -65,6 +69,17 @@ namespace AndroidIntelliTool
             // Initialize ImageList for File Explorer
             fileExplorerImageList.Images.Add(SystemIcons.WinLogo.ToBitmap()); // Index 0 for folder (placeholder)
             fileExplorerImageList.Images.Add(SystemIcons.WinLogo.ToBitmap()); // Index 1 for file (placeholder)
+
+            // Populate drive combo box
+            foreach (var drive in Directory.GetLogicalDrives())
+            {
+                driveComboBox.Items.Add(drive);
+            }
+            if (driveComboBox.Items.Count > 0)
+            {
+                driveComboBox.SelectedIndex = 0;
+                _currentLocalPath = driveComboBox.SelectedItem.ToString();
+            }
 
             if (!LoadConfigAndCheckPaths())
             {
@@ -100,7 +115,7 @@ namespace AndroidIntelliTool
                 var items = new List<ListViewItem>();
                 // Add parent directory navigation ".."
                 if (dirInfo.Parent != null)
-                {
+                { 
                     var parentItem = new ListViewItem("..", 0);
                     parentItem.Tag = "dir_up";
                     items.Add(parentItem);
@@ -119,6 +134,7 @@ namespace AndroidIntelliTool
                 }
                 localFileListView.Items.AddRange(items.ToArray());
                 _currentLocalPath = path;
+                localPathTextBox.Text = path;
             }
             catch (Exception ex)
             {
@@ -272,6 +288,40 @@ namespace AndroidIntelliTool
                 outputTextBox.AppendText("Success!");
             }
             await PopulateDeviceFiles(_currentDevicePath);
+        }
+
+        #endregion
+
+        #region File Explorer Handlers
+
+        private void driveComboBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            _currentLocalPath = driveComboBox.SelectedItem.ToString();
+            PopulateLocalFiles(_currentLocalPath);
+        }
+
+        private void localPathTextBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                var path = localPathTextBox.Text;
+                if (Directory.Exists(path))
+                {
+                    PopulateLocalFiles(path);
+                }
+                else
+                {
+                    MessageBox.Show("The specified path does not exist.", "Invalid Path", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+        }
+
+        private void localUpButton_Click(object sender, EventArgs e)
+        {
+            if (Directory.GetParent(_currentLocalPath) != null)
+            {
+                PopulateLocalFiles(Directory.GetParent(_currentLocalPath).FullName);
+            }
         }
 
         #endregion

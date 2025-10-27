@@ -22,6 +22,9 @@ namespace AndroidIntelliTool
             this.mainTabControl = new System.Windows.Forms.TabControl();
             this.mainTabPage = new System.Windows.Forms.TabPage();
             this.fileExplorerTabPage = new System.Windows.Forms.TabPage();
+            this.localUpButton = new System.Windows.Forms.Button();
+            this.driveComboBox = new System.Windows.Forms.ComboBox();
+            this.localPathTextBox = new System.Windows.Forms.TextBox();
             this.deviceComboBox = new System.Windows.Forms.ComboBox();
             this.refreshDevicesButton = new System.Windows.Forms.Button();
             this.connectionStatusLabel = new System.Windows.Forms.Label();
@@ -115,6 +118,9 @@ namespace AndroidIntelliTool
             // 
             // fileExplorerTabPage
             // 
+            this.fileExplorerTabPage.Controls.Add(this.localUpButton);
+            this.fileExplorerTabPage.Controls.Add(this.driveComboBox);
+            this.fileExplorerTabPage.Controls.Add(this.localPathTextBox);
             this.fileExplorerTabPage.Controls.Add(this.setDefaultDownloadFolderButton);
             this.fileExplorerTabPage.Controls.Add(this.downloadButton);
             this.fileExplorerTabPage.Controls.Add(this.uploadButton);
@@ -371,9 +377,9 @@ namespace AndroidIntelliTool
             this.localFileListView.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             new System.Windows.Forms.ColumnHeader { Text = "Name", Width = 240 }
             });
-            this.localFileListView.Location = new System.Drawing.Point(6, 6);
+            this.localFileListView.Location = new System.Drawing.Point(6, 32);
             this.localFileListView.Name = "localFileListView";
-            this.localFileListView.Size = new System.Drawing.Size(260, 350);
+            this.localFileListView.Size = new System.Drawing.Size(260, 324);
             this.localFileListView.SmallImageList = this.fileExplorerImageList;
             this.localFileListView.UseCompatibleStateImageBehavior = false;
             this.localFileListView.View = System.Windows.Forms.View.Details;
@@ -403,6 +409,26 @@ namespace AndroidIntelliTool
             this.deviceUpButton.Name = "deviceUpButton";
             this.deviceUpButton.Size = new System.Drawing.Size(24, 22);
             this.deviceUpButton.Text = "^";
+            // 
+            // localPathTextBox
+            // 
+            this.localPathTextBox.Location = new System.Drawing.Point(95, 6);
+            this.localPathTextBox.Name = "localPathTextBox";
+            this.localPathTextBox.Size = new System.Drawing.Size(171, 20);
+            // 
+            // driveComboBox
+            // 
+            this.driveComboBox.FormattingEnabled = true;
+            this.driveComboBox.Location = new System.Drawing.Point(36, 5);
+            this.driveComboBox.Name = "driveComboBox";
+            this.driveComboBox.Size = new System.Drawing.Size(53, 21);
+            // 
+            // localUpButton
+            // 
+            this.localUpButton.Location = new System.Drawing.Point(6, 5);
+            this.localUpButton.Name = "localUpButton";
+            this.localUpButton.Size = new System.Drawing.Size(24, 22);
+            this.localUpButton.Text = "^";
             // 
             // uploadButton
             // 
@@ -451,7 +477,7 @@ namespace AndroidIntelliTool
             this.Controls.Add(this.menuStrip1);
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "Form1";
-            this.Text = "Android IntelliTool";
+            this.Text = "AndroidIntelliTool";
             this.mainTabControl.ResumeLayout(false);
             this.mainTabPage.ResumeLayout(false);
             this.mainTabPage.PerformLayout();
@@ -506,6 +532,9 @@ namespace AndroidIntelliTool
         private System.Windows.Forms.ImageList fileExplorerImageList;
         private System.Windows.Forms.Button forceStopAppButton;
         private System.Windows.Forms.Button setDefaultDownloadFolderButton;
+        private System.Windows.Forms.TextBox localPathTextBox;
+        private System.Windows.Forms.ComboBox driveComboBox;
+        private System.Windows.Forms.Button localUpButton;
 
     }
 }
