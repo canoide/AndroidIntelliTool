@@ -15,8 +15,7 @@ namespace AndroidIntelliTool
     {
         private Dictionary<string, string> _config = new Dictionary<string, string>();
         private const string ConfigFileName = "AndroidIntelliTool.cfg";
-        private string _currentLocalPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-        private string _currentDevicePath = "/sdcard/";
+
 
         public Form1(string[] args)
         {
@@ -46,40 +45,14 @@ namespace AndroidIntelliTool
             screenMirrorButton.Click += (s, ev) => RunScrcpy(false);
             screenRecordButton.Click += (s, ev) => RunScrcpy(true);
             forceStopAppButton.Click += async (s, ev) => await RunAppCommand("Force Stopping", "shell am force-stop {{pkg}}");
+            fileExplorerButton.Click += (s, ev) => OpenFileExplorer(); // New button handler
 
             // Menu
             exitToolStripMenuItem.Click += (s, ev) => this.Close();
             settingsToolStripMenuItem.Click += (s, ev) => OpenSettings();
 
-            // File Explorer Tab
-            driveComboBox.SelectedIndexChanged += (s, ev) => driveComboBox_SelectedIndexChanged(s, ev);
-            localPathTextBox.KeyDown += (s, ev) => localPathTextBox_KeyDown(s, ev);
-            localUpButton.Click += (s, ev) => localUpButton_Click(s, ev);
-            refreshExplorerButton.Click += async (s, ev) => await RefreshFileExplorer();
-            localFileListView.DoubleClick += (s, ev) => NavigateLocalDirectory();
-            deviceFileListView.DoubleClick += async (s, ev) => await NavigateDeviceDirectory();
-            deviceUpButton.Click += async (s, ev) => await NavigateDeviceUp();
-            uploadButton.Click += async (s, ev) => await UploadFile();
-            downloadButton.Click += async (s, ev) => await DownloadFile();
-            deleteDeviceFileButton.Click += async (s, ev) => await DeleteDeviceFile();
-
             // Main Tab Control
-            mainTabControl.SelectedIndexChanged += new System.EventHandler(this.mainTabControl_SelectedIndexChanged);
-
-            // Initialize ImageList for File Explorer
-            fileExplorerImageList.Images.Add(SystemIcons.WinLogo.ToBitmap()); // Index 0 for folder (placeholder)
-            fileExplorerImageList.Images.Add(SystemIcons.WinLogo.ToBitmap()); // Index 1 for file (placeholder)
-
-            // Populate drive combo box
-            foreach (var drive in Directory.GetLogicalDrives())
-            {
-                driveComboBox.Items.Add(drive);
-            }
-            if (driveComboBox.Items.Count > 0)
-            {
-                driveComboBox.SelectedIndex = 0;
-                _currentLocalPath = driveComboBox.SelectedItem.ToString();
-            }
+            // mainTabControl.SelectedIndexChanged += new System.EventHandler(this.mainTabControl_SelectedIndexChanged); // Removed as File Explorer is now a separate form
 
             if (!LoadConfigAndCheckPaths())
             {
@@ -90,242 +63,8 @@ namespace AndroidIntelliTool
             await RefreshDevices();
         }
 
-        private async void mainTabControl_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            if (mainTabControl.SelectedTab == fileExplorerTabPage)
-            {
-                await RefreshFileExplorer();
-            }
-        }
-
-        #region File Explorer
-
-        private async Task RefreshFileExplorer()
-        {
-            PopulateLocalFiles(_currentLocalPath);
-            await PopulateDeviceFiles(_currentDevicePath);
-        }
-
-        private void PopulateLocalFiles(string path)
-        {
-            try
-            {
-                localFileListView.Items.Clear();
-                var dirInfo = new DirectoryInfo(path);
-                var items = new List<ListViewItem>();
-                // Add parent directory navigation ".."
-                if (dirInfo.Parent != null)
-                { 
-                    var parentItem = new ListViewItem("..", 0);
-                    parentItem.Tag = "dir_up";
-                    items.Add(parentItem);
-                }
-                foreach (var dir in dirInfo.GetDirectories())
-                {
-                    var item = new ListViewItem(dir.Name, 0);
-                    item.Tag = dir.FullName;
-                    items.Add(item);
-                }
-                foreach (var file in dirInfo.GetFiles())
-                {
-                    var item = new ListViewItem(file.Name, 1);
-                    item.Tag = file.FullName;
-                    items.Add(item);
-                }
-                localFileListView.Items.AddRange(items.ToArray());
-                _currentLocalPath = path;
-                localPathTextBox.Text = path;
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error listing local files: {ex.Message}");
-            }
-        }
-
-        private async Task PopulateDeviceFiles(string path)
-        {
-            string device = deviceComboBox.SelectedItem as string;
-            if (string.IsNullOrEmpty(device)) return;
-
-            devicePathTextBox.Text = path;
-            deviceFileListView.Items.Clear();
-
-            var (output, exitCode) = await RunCommandAsync(_config["adb"], $"-s {device} shell ls -F \"{path}\"");
-            if (exitCode != 0)
-            {
-                outputTextBox.AppendText($"\nError listing device files: {output}");
-                return;
-            }
-
-            var items = new List<ListViewItem>();
-            var lines = output.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
-            foreach (var line in lines)
-            {
-                bool isDir = line.EndsWith("/");
-                string name = isDir ? line.TrimEnd('/') : line;
-                var item = new ListViewItem(name, isDir ? 0 : 1);
-                item.Tag = path + name + (isDir ? "/" : "");
-                items.Add(item);
-            }
-            deviceFileListView.Items.AddRange(items.ToArray());
-            _currentDevicePath = path;
-        }
-
-        private void NavigateLocalDirectory()
-        {
-            if (localFileListView.SelectedItems.Count == 0) return;
-            var selectedItem = localFileListView.SelectedItems[0];
-            string tag = selectedItem.Tag as string;
-
-            if (tag == "dir_up")
-            {
-                PopulateLocalFiles(Directory.GetParent(_currentLocalPath).FullName);
-            }
-            else if (Directory.Exists(tag))
-            {
-                PopulateLocalFiles(tag);
-            }
-        }
-
-        private async Task NavigateDeviceDirectory()
-        {
-            if (deviceFileListView.SelectedItems.Count == 0) return;
-            var selectedItem = deviceFileListView.SelectedItems[0];
-            string path = selectedItem.Tag as string;
-            if (path.EndsWith("/"))
-            {
-                await PopulateDeviceFiles(path);
-            }
-        }
-
-        private async Task NavigateDeviceUp()
-        {
-            if (_currentDevicePath == "/" || _currentDevicePath == "/sdcard/") return;
-            string currentDir = _currentDevicePath.TrimEnd('/');
-            var parentPath = Path.GetDirectoryName(currentDir).Replace('\\', '/') + "/";
-            await PopulateDeviceFiles(parentPath);
-        }
-
-        private async Task UploadFile()
-        {
-            if (localFileListView.SelectedItems.Count == 0) { MessageBox.Show("Select a local file to upload."); return; }
-            string localPath = localFileListView.SelectedItems[0].Tag as string;
-            if (Directory.Exists(localPath)) { MessageBox.Show("Folder upload not supported yet."); return; }
-
-            string device = deviceComboBox.SelectedItem as string;
-            if (string.IsNullOrEmpty(device)) { MessageBox.Show("Select a device."); return; }
-
-            string devicePath = _currentDevicePath + Path.GetFileName(localPath);
-            outputTextBox.Text = $"Uploading {Path.GetFileName(localPath)} to {devicePath}...\n";
-            var (output, exitCode) = await RunCommandAsync(_config["adb"], $"-s {device} push \"{localPath}\" \"{devicePath}\"");
-            if (exitCode != 0)
-            {
-                outputTextBox.AppendText($"\nError uploading file: {output}");
-            }
-            else
-            {
-                outputTextBox.AppendText("Success!");
-            }
-            await PopulateDeviceFiles(_currentDevicePath);
-        }
-
-        private async Task DownloadFile()
-        {
-            if (deviceFileListView.SelectedItems.Count == 0) { MessageBox.Show("Select a device file to download."); return; }
-            string devicePath = deviceFileListView.SelectedItems[0].Tag as string;
-            if (devicePath.EndsWith("/")) { MessageBox.Show("Folder download not supported yet."); return; }
-
-            string device = deviceComboBox.SelectedItem as string;
-            if (string.IsNullOrEmpty(device)) { MessageBox.Show("Select a device."); return; }
-
-            string localPath = Path.Combine(_currentLocalPath, Path.GetFileName(devicePath));
-            string tempPath = Path.Combine(Path.GetTempPath(), Path.GetFileName(devicePath));
-
-            outputTextBox.Text = $"Downloading {Path.GetFileName(devicePath)} to temporary location...\n";
-            var (output, exitCode) = await RunCommandAsync(_config["adb"], $"-s {device} pull \"{devicePath}\" \"{tempPath}\"");
-
-            if (exitCode != 0)
-            {
-                outputTextBox.AppendText($"\nError during adb pull to temp: {output}");
-            }
-            else
-            {
-                try
-                {
-                    // Ensure the target directory exists before moving
-                    Directory.CreateDirectory(_currentLocalPath);
-                    File.Move(tempPath, localPath, true); // true to overwrite if exists
-                    outputTextBox.AppendText($"Success! File moved to {localPath}\n");
-                }
-                catch (Exception ex)
-                {
-                    outputTextBox.AppendText($"\nError moving file from temp to final destination: {ex.Message}\n");
-                    ShowMessageBoxWithOpenFile($"Error moviendo el archivo de la carpeta temporal a '{localPath}': {ex.Message}\n\nEl archivo podría estar en la carpeta temporal: {tempPath}", "Error de Movimiento", tempPath);
-                }
-            }
-            PopulateLocalFiles(_currentLocalPath);
-        }
-
-        private async Task DeleteDeviceFile()
-        {
-            if (deviceFileListView.SelectedItems.Count == 0) { MessageBox.Show("Select a device file to delete."); return; }
-            string devicePath = deviceFileListView.SelectedItems[0].Tag as string;
-
-            if (MessageBox.Show($"Are you sure you want to delete {devicePath}?", "Confirm Delete", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes) return;
-
-            string device = deviceComboBox.SelectedItem as string;
-            if (string.IsNullOrEmpty(device)) { MessageBox.Show("Select a device."); return; }
-
-            outputTextBox.Text = $"Deleting {devicePath}...\n";
-            string command = devicePath.EndsWith("/") ? "shell rm -r" : "shell rm";
-            var (output, exitCode) = await RunCommandAsync(_config["adb"], $"-s {device} {command} \"{devicePath}\"");
-            if (exitCode != 0)
-            {
-                outputTextBox.AppendText($"\nError deleting file: {output}");
-            }
-            else
-            {
-                outputTextBox.AppendText("Success!");
-            }
-            await PopulateDeviceFiles(_currentDevicePath);
-        }
-
+                #region File Explorer (Moved to FileExplorerForm)
         #endregion
-
-        #region File Explorer Handlers
-
-        private void driveComboBox_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            _currentLocalPath = driveComboBox.SelectedItem.ToString();
-            PopulateLocalFiles(_currentLocalPath);
-        }
-
-        private void localPathTextBox_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (e.KeyCode == Keys.Enter)
-            {
-                var path = localPathTextBox.Text;
-                if (Directory.Exists(path))
-                {
-                    PopulateLocalFiles(path);
-                }
-                else
-                {
-                    MessageBox.Show("The specified path does not exist.", "Invalid Path", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-            }
-        }
-
-        private void localUpButton_Click(object sender, EventArgs e)
-        {
-            if (Directory.GetParent(_currentLocalPath) != null)
-            {
-                PopulateLocalFiles(Directory.GetParent(_currentLocalPath).FullName);
-            }
-        }
-
-        #endregion
-
         #region Config and Startup
 
         private bool LoadConfigAndCheckPaths()
@@ -658,9 +397,25 @@ namespace AndroidIntelliTool
             });
         }
 
+        public void ShowOutput(string text)
+        {
+            outputTextBox.AppendText(text);
+        }
+
+        private void OpenFileExplorer()
+        {
+            string device = deviceComboBox.SelectedItem as string;
+            if (string.IsNullOrEmpty(device))
+            {
+                MessageBox.Show("Please select a device first.", "No Device", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+            new FileExplorerForm(this, _config, device).Show();
+        }
+
         #region Helper Methods
 
-        private void ShowMessageBoxWithOpenFile(string message, string title, string filePath = null)
+        public void ShowMessageBoxWithOpenFile(string message, string title, string filePath = null)
         {
             using (Form msgForm = new Form()
             {

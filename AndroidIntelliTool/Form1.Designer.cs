@@ -21,10 +21,6 @@ namespace AndroidIntelliTool
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
             this.mainTabControl = new System.Windows.Forms.TabControl();
             this.mainTabPage = new System.Windows.Forms.TabPage();
-            this.fileExplorerTabPage = new System.Windows.Forms.TabPage();
-            this.localUpButton = new System.Windows.Forms.Button();
-            this.driveComboBox = new System.Windows.Forms.ComboBox();
-            this.localPathTextBox = new System.Windows.Forms.TextBox();
             this.deviceComboBox = new System.Windows.Forms.ComboBox();
             this.refreshDevicesButton = new System.Windows.Forms.Button();
             this.connectionStatusLabel = new System.Windows.Forms.Label();
@@ -51,32 +47,17 @@ namespace AndroidIntelliTool
             this.settingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.screenMirrorButton = new System.Windows.Forms.Button();
             this.screenRecordButton = new System.Windows.Forms.Button();
-            this.localFileListView = new System.Windows.Forms.ListView();
-            this.deviceFileListView = new System.Windows.Forms.ListView();
-            this.devicePathTextBox = new System.Windows.Forms.TextBox();
-            this.deviceUpButton = new System.Windows.Forms.Button();
-            this.uploadButton = new System.Windows.Forms.Button();
-            this.downloadButton = new System.Windows.Forms.Button();
-            this.deleteDeviceFileButton = new System.Windows.Forms.Button();
-            this.refreshExplorerButton = new System.Windows.Forms.Button();
-            this.fileExplorerImageList = new System.Windows.Forms.ImageList(this.components);
             this.forceStopAppButton = new System.Windows.Forms.Button();
-            this.setDefaultDownloadFolderButton = new System.Windows.Forms.Button();
+            this.fileExplorerButton = new System.Windows.Forms.Button(); 
+
             this.mainTabControl.SuspendLayout();
             this.mainTabPage.SuspendLayout();
-            this.fileExplorerTabPage.SuspendLayout();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
-            // 
-            // fileExplorerImageList
-            // 
-            this.fileExplorerImageList.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("fileExplorerImageList.ImageStream")));
-            this.fileExplorerImageList.TransparentColor = System.Drawing.Color.Transparent;
             // 
             // mainTabControl
             // 
             this.mainTabControl.Controls.Add(this.mainTabPage);
-            this.mainTabControl.Controls.Add(this.fileExplorerTabPage);
             this.mainTabControl.Dock = System.Windows.Forms.DockStyle.Fill;
             this.mainTabControl.Location = new System.Drawing.Point(0, 24);
             this.mainTabControl.Name = "mainTabControl";
@@ -86,6 +67,7 @@ namespace AndroidIntelliTool
             // 
             // mainTabPage
             // 
+            this.mainTabPage.Controls.Add(this.fileExplorerButton); 
             this.mainTabPage.Controls.Add(this.deviceComboBox);
             this.mainTabPage.Controls.Add(this.refreshDevicesButton);
             this.mainTabPage.Controls.Add(this.connectionStatusLabel);
@@ -116,27 +98,14 @@ namespace AndroidIntelliTool
             this.mainTabPage.Text = "Main";
             this.mainTabPage.UseVisualStyleBackColor = true;
             // 
-            // fileExplorerTabPage
+            // fileExplorerButton
             // 
-            this.fileExplorerTabPage.Controls.Add(this.localUpButton);
-            this.fileExplorerTabPage.Controls.Add(this.driveComboBox);
-            this.fileExplorerTabPage.Controls.Add(this.localPathTextBox);
-            this.fileExplorerTabPage.Controls.Add(this.setDefaultDownloadFolderButton);
-            this.fileExplorerTabPage.Controls.Add(this.downloadButton);
-            this.fileExplorerTabPage.Controls.Add(this.uploadButton);
-            this.fileExplorerTabPage.Controls.Add(this.deleteDeviceFileButton);
-            this.fileExplorerTabPage.Controls.Add(this.refreshExplorerButton);
-            this.fileExplorerTabPage.Controls.Add(this.deviceUpButton);
-            this.fileExplorerTabPage.Controls.Add(this.devicePathTextBox);
-            this.fileExplorerTabPage.Controls.Add(this.deviceFileListView);
-            this.fileExplorerTabPage.Controls.Add(this.localFileListView);
-            this.fileExplorerTabPage.Location = new System.Drawing.Point(4, 22);
-            this.fileExplorerTabPage.Name = "fileExplorerTabPage";
-            this.fileExplorerTabPage.Padding = new System.Windows.Forms.Padding(3);
-            this.fileExplorerTabPage.Size = new System.Drawing.Size(553, 400);
-            this.fileExplorerTabPage.TabIndex = 1;
-            this.fileExplorerTabPage.Text = "File Explorer";
-            this.fileExplorerTabPage.UseVisualStyleBackColor = true;
+            this.fileExplorerButton.Location = new System.Drawing.Point(344, 246);
+            this.fileExplorerButton.Name = "fileExplorerButton";
+            this.fileExplorerButton.Size = new System.Drawing.Size(100, 23);
+            this.fileExplorerButton.TabIndex = 24;
+            this.fileExplorerButton.Text = "File Explorer";
+            this.fileExplorerButton.UseVisualStyleBackColor = true;
             // 
             // deviceComboBox
             // 
@@ -372,102 +341,6 @@ namespace AndroidIntelliTool
             this.forceStopAppButton.Text = "Force Stop App";
             this.forceStopAppButton.UseVisualStyleBackColor = true;
             // 
-            // localFileListView
-            // 
-            this.localFileListView.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            new System.Windows.Forms.ColumnHeader { Text = "Name", Width = 240 }
-            });
-            this.localFileListView.Location = new System.Drawing.Point(6, 32);
-            this.localFileListView.Name = "localFileListView";
-            this.localFileListView.Size = new System.Drawing.Size(260, 324);
-            this.localFileListView.SmallImageList = this.fileExplorerImageList;
-            this.localFileListView.UseCompatibleStateImageBehavior = false;
-            this.localFileListView.View = System.Windows.Forms.View.Details;
-            // 
-            // deviceFileListView
-            // 
-            this.deviceFileListView.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            new System.Windows.Forms.ColumnHeader { Text = "Name", Width = 240 }
-            });
-            this.deviceFileListView.Location = new System.Drawing.Point(285, 32);
-            this.deviceFileListView.Name = "deviceFileListView";
-            this.deviceFileListView.Size = new System.Drawing.Size(260, 324);
-            this.deviceFileListView.SmallImageList = this.fileExplorerImageList;
-            this.deviceFileListView.UseCompatibleStateImageBehavior = false;
-            this.deviceFileListView.View = System.Windows.Forms.View.Details;
-            // 
-            // devicePathTextBox
-            // 
-            this.devicePathTextBox.Location = new System.Drawing.Point(315, 6);
-            this.devicePathTextBox.Name = "devicePathTextBox";
-            this.devicePathTextBox.ReadOnly = true;
-            this.devicePathTextBox.Size = new System.Drawing.Size(230, 20);
-            // 
-            // deviceUpButton
-            // 
-            this.deviceUpButton.Location = new System.Drawing.Point(285, 5);
-            this.deviceUpButton.Name = "deviceUpButton";
-            this.deviceUpButton.Size = new System.Drawing.Size(24, 22);
-            this.deviceUpButton.Text = "^";
-            // 
-            // localPathTextBox
-            // 
-            this.localPathTextBox.Location = new System.Drawing.Point(95, 6);
-            this.localPathTextBox.Name = "localPathTextBox";
-            this.localPathTextBox.Size = new System.Drawing.Size(171, 20);
-            // 
-            // driveComboBox
-            // 
-            this.driveComboBox.FormattingEnabled = true;
-            this.driveComboBox.Location = new System.Drawing.Point(36, 5);
-            this.driveComboBox.Name = "driveComboBox";
-            this.driveComboBox.Size = new System.Drawing.Size(53, 21);
-            // 
-            // localUpButton
-            // 
-            this.localUpButton.Location = new System.Drawing.Point(6, 5);
-            this.localUpButton.Name = "localUpButton";
-            this.localUpButton.Size = new System.Drawing.Size(24, 22);
-            this.localUpButton.Text = "^";
-            // 
-            // uploadButton
-            // 
-            this.uploadButton.Location = new System.Drawing.Point(200, 362);
-            this.uploadButton.Name = "uploadButton";
-            this.uploadButton.Size = new System.Drawing.Size(66, 23);
-            this.uploadButton.TabIndex = 0;
-            this.uploadButton.Text = "Upload";
-            // 
-            // downloadButton
-            // 
-            this.downloadButton.Location = new System.Drawing.Point(285, 362);
-            this.downloadButton.Name = "downloadButton";
-            this.downloadButton.Size = new System.Drawing.Size(75, 23);
-            this.downloadButton.TabIndex = 0;
-            this.downloadButton.Text = "Download";
-            // 
-            // deleteDeviceFileButton
-            // 
-            this.deleteDeviceFileButton.Location = new System.Drawing.Point(366, 362);
-            this.deleteDeviceFileButton.Name = "deleteDeviceFileButton";
-            this.deleteDeviceFileButton.Size = new System.Drawing.Size(75, 23);
-            this.deleteDeviceFileButton.Text = "Delete";
-            // 
-            // refreshExplorerButton
-            // 
-            this.refreshExplorerButton.Location = new System.Drawing.Point(447, 362);
-            this.refreshExplorerButton.Name = "refreshExplorerButton";
-            this.refreshExplorerButton.Size = new System.Drawing.Size(98, 23);
-            this.refreshExplorerButton.TabIndex = 0;
-            this.refreshExplorerButton.Text = "Refresh Lists";
-            // 
-            // setDefaultDownloadFolderButton
-            // 
-            this.setDefaultDownloadFolderButton.Location = new System.Drawing.Point(6, 389);
-            this.setDefaultDownloadFolderButton.Name = "setDefaultDownloadFolderButton";
-            this.setDefaultDownloadFolderButton.Size = new System.Drawing.Size(188, 23);
-            this.setDefaultDownloadFolderButton.Text = "Set Default Download Folder";
-            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -481,8 +354,6 @@ namespace AndroidIntelliTool
             this.mainTabControl.ResumeLayout(false);
             this.mainTabPage.ResumeLayout(false);
             this.mainTabPage.PerformLayout();
-            this.fileExplorerTabPage.ResumeLayout(false);
-            this.fileExplorerTabPage.PerformLayout();
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
             this.ResumeLayout(false);
@@ -520,21 +391,8 @@ namespace AndroidIntelliTool
         private System.Windows.Forms.ToolStripMenuItem settingsToolStripMenuItem;
         private System.Windows.Forms.Button screenMirrorButton;
         private System.Windows.Forms.Button screenRecordButton;
-        // File Explorer Controls
-        private System.Windows.Forms.ListView localFileListView;
-        private System.Windows.Forms.ListView deviceFileListView;
-        private System.Windows.Forms.TextBox devicePathTextBox;
-        private System.Windows.Forms.Button deviceUpButton;
-        private System.Windows.Forms.Button uploadButton;
-        private System.Windows.Forms.Button downloadButton;
-        private System.Windows.Forms.Button deleteDeviceFileButton;
-        private System.Windows.Forms.Button refreshExplorerButton;
-        private System.Windows.Forms.ImageList fileExplorerImageList;
         private System.Windows.Forms.Button forceStopAppButton;
-        private System.Windows.Forms.Button setDefaultDownloadFolderButton;
-        private System.Windows.Forms.TextBox localPathTextBox;
-        private System.Windows.Forms.ComboBox driveComboBox;
-        private System.Windows.Forms.Button localUpButton;
+        private System.Windows.Forms.Button fileExplorerButton; // New button
 
     }
 }
