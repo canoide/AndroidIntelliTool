@@ -50,6 +50,7 @@ namespace AndroidIntelliTool
             // Menu
             exitToolStripMenuItem.Click += (s, ev) => this.Close();
             settingsToolStripMenuItem.Click += (s, ev) => OpenSettings();
+            aboutToolStripMenuItem.Click += (s, ev) => new AboutForm().ShowDialog();
 
             // Main Tab Control
             // mainTabControl.SelectedIndexChanged += new System.EventHandler(this.mainTabControl_SelectedIndexChanged); // Removed as File Explorer is now a separate form
@@ -88,6 +89,11 @@ namespace AndroidIntelliTool
         {
             var lines = _config.Select(kvp => $"{kvp.Key}={kvp.Value}");
             File.WriteAllLines(ConfigFileName, lines);
+        }
+
+        public void SaveConfiguration()
+        {
+            SaveConfig();
         }
 
         private void OpenSettings(bool isFirstTime = false)
@@ -168,7 +174,8 @@ namespace AndroidIntelliTool
             }
             else
             {
-                outputTextBox.AppendText("Success!");
+                outputTextBox.AppendText("Success!\n");
+                await RunAppCommand("Launching", "shell monkey -p {{pkg}} -c android.intent.category.LAUNCHER 1");
             }
         }
 
@@ -199,7 +206,7 @@ namespace AndroidIntelliTool
         {
             string device = deviceComboBox.SelectedItem as string;
             if (string.IsNullOrEmpty(device)) { MessageBox.Show("Please select a device."); return; }
-            new LogcatForm(device, _config["adb"]).Show();
+            new LogcatForm(this, device, _config["adb"], _config).Show();
         }
 
         private void UpdateConnectionStatus()
@@ -310,19 +317,22 @@ namespace AndroidIntelliTool
             if (string.IsNullOrEmpty(device) || string.IsNullOrEmpty(pkg)) { MessageBox.Show("Please select a device and ensure a package name is present."); return; }
 
             outputTextBox.Text = $"{action} {pkg} on {device}...\n";
+            bool allSucceeded = true;
             foreach (var command in adbCommands)
             {
                 string arguments = $"-s {device} " + command.Replace("{{pkg}}", pkg);
                 var (output, exitCode) = await RunCommandAsync(_config["adb"], arguments);
                 if (exitCode != 0)
                 {
-                    outputTextBox.AppendText($"\nError running '{{command}}':\n" + output);
-                    return; 
+                    outputTextBox.AppendText($"\nError: {output}");
+                    allSucceeded = false;
+                    break; 
                 }
-                else
-                {
-                    outputTextBox.AppendText($"\nSuccess running '{{command}}':\n" + output);
-                }
+            }
+
+            if (allSucceeded)
+            {
+                outputTextBox.AppendText("Success!");
             }
         }
 

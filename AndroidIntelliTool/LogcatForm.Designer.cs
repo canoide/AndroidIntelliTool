@@ -17,7 +17,8 @@ namespace AndroidIntelliTool
 
         private void InitializeComponent()
         {
-            this.logListView = new System.Windows.Forms.ListView();
+            this.components = new System.ComponentModel.Container();
+            this.logListView = new AndroidIntelliTool.DoubleBufferedListView();
             this.colTime = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.colTag = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.colMessage = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -34,6 +35,10 @@ namespace AndroidIntelliTool
             this.packageFilterTextBox = new System.Windows.Forms.TextBox();
             this.labelPackage = new System.Windows.Forms.Label();
             this.pidFilterButton = new System.Windows.Forms.Button();
+            this.autoScrollCheckBox = new System.Windows.Forms.CheckBox();
+            this.statusStrip1 = new System.Windows.Forms.StatusStrip();
+            this.pidStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
+            this.statusStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
             // logListView
@@ -49,7 +54,7 @@ namespace AndroidIntelliTool
             this.logListView.HideSelection = false;
             this.logListView.Location = new System.Drawing.Point(12, 91);
             this.logListView.Name = "logListView";
-            this.logListView.Size = new System.Drawing.Size(760, 347);
+            this.logListView.Size = new System.Drawing.Size(760, 337);
             this.logListView.TabIndex = 0;
             this.logListView.UseCompatibleStateImageBehavior = false;
             this.logListView.View = System.Windows.Forms.View.Details;
@@ -188,12 +193,41 @@ namespace AndroidIntelliTool
             this.pidFilterButton.Text = "Filter by PID";
             this.pidFilterButton.UseVisualStyleBackColor = true;
             // 
+            // autoScrollCheckBox
+            // 
+            this.autoScrollCheckBox.AutoSize = true;
+            this.autoScrollCheckBox.Checked = true;
+            this.autoScrollCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.autoScrollCheckBox.Location = new System.Drawing.Point(518, 23);
+            this.autoScrollCheckBox.Name = "autoScrollCheckBox";
+            this.autoScrollCheckBox.Size = new System.Drawing.Size(80, 17);
+            this.autoScrollCheckBox.TabIndex = 14;
+            this.autoScrollCheckBox.Text = "Auto-scroll";
+            this.autoScrollCheckBox.UseVisualStyleBackColor = true;
+            // 
+            // statusStrip1
+            // 
+            this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.pidStatusLabel});
+            this.statusStrip1.Location = new System.Drawing.Point(0, 428);
+            this.statusStrip1.Name = "statusStrip1";
+            this.statusStrip1.Size = new System.Drawing.Size(784, 22);
+            this.statusStrip1.TabIndex = 15;
+            this.statusStrip1.Text = "statusStrip1";
+            // 
+            // pidStatusLabel
+            // 
+            this.pidStatusLabel.Name = "pidStatusLabel";
+            this.pidStatusLabel.Size = new System.Drawing.Size(0, 17);
+            // 
             // LogcatForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(784, 450);
+            this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.pidFilterButton);
+            this.Controls.Add(this.autoScrollCheckBox);
             this.Controls.Add(this.labelPackage);
             this.Controls.Add(this.packageFilterTextBox);
             this.Controls.Add(this.exportAllButton);
@@ -209,6 +243,8 @@ namespace AndroidIntelliTool
             this.Controls.Add(this.logListView);
             this.Name = "LogcatForm";
             this.Text = "Logcat Viewer";
+            this.statusStrip1.ResumeLayout(false);
+            this.statusStrip1.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -216,7 +252,7 @@ namespace AndroidIntelliTool
 
         #endregion
 
-        private System.Windows.Forms.ListView logListView;
+        private DoubleBufferedListView logListView;
         private System.Windows.Forms.ColumnHeader colTime;
         private System.Windows.Forms.ColumnHeader colTag;
         private System.Windows.Forms.ColumnHeader colMessage;
@@ -233,5 +269,8 @@ namespace AndroidIntelliTool
         private System.Windows.Forms.TextBox packageFilterTextBox;
         private System.Windows.Forms.Label labelPackage;
         private System.Windows.Forms.Button pidFilterButton;
+        private System.Windows.Forms.CheckBox autoScrollCheckBox;
+        private System.Windows.Forms.StatusStrip statusStrip1;
+        private System.Windows.Forms.ToolStripStatusLabel pidStatusLabel;
     }
 }

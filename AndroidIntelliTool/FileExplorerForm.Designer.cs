@@ -23,7 +23,7 @@ namespace AndroidIntelliTool
             this.localUpButton = new System.Windows.Forms.Button();
             this.driveComboBox = new System.Windows.Forms.ComboBox();
             this.localPathTextBox = new System.Windows.Forms.TextBox();
-            this.setDefaultDownloadFolderButton = new System.Windows.Forms.Button();
+            
             this.downloadButton = new System.Windows.Forms.Button();
             this.uploadButton = new System.Windows.Forms.Button();
             this.deleteDeviceFileButton = new System.Windows.Forms.Button();
@@ -147,7 +147,7 @@ namespace AndroidIntelliTool
             this.Controls.Add(this.downloadButton);
             this.Controls.Add(this.deleteDeviceFileButton);
             this.Controls.Add(this.refreshExplorerButton);
-            this.Controls.Add(this.setDefaultDownloadFolderButton);
+            
             this.Name = "FileExplorerForm";
             this.Text = "File Explorer";
             this.ResumeLayout(false);
@@ -167,7 +167,7 @@ namespace AndroidIntelliTool
         private System.Windows.Forms.Button downloadButton;
         private System.Windows.Forms.Button deleteDeviceFileButton;
         private System.Windows.Forms.Button refreshExplorerButton;
-        private System.Windows.Forms.Button setDefaultDownloadFolderButton;
+        
         private System.Windows.Forms.ImageList fileExplorerImageList;
     }
 }

@@ -19,8 +19,6 @@ namespace AndroidIntelliTool
         {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
-            this.mainTabControl = new System.Windows.Forms.TabControl();
-            this.mainTabPage = new System.Windows.Forms.TabPage();
             this.deviceComboBox = new System.Windows.Forms.ComboBox();
             this.refreshDevicesButton = new System.Windows.Forms.Button();
             this.connectionStatusLabel = new System.Windows.Forms.Label();
@@ -45,79 +43,26 @@ namespace AndroidIntelliTool
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.settingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.helpMenuToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.screenMirrorButton = new System.Windows.Forms.Button();
             this.screenRecordButton = new System.Windows.Forms.Button();
             this.forceStopAppButton = new System.Windows.Forms.Button();
-            this.fileExplorerButton = new System.Windows.Forms.Button(); 
-
-            this.mainTabControl.SuspendLayout();
-            this.mainTabPage.SuspendLayout();
+            this.fileExplorerButton = new System.Windows.Forms.Button();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
-            // 
-            // mainTabControl
-            // 
-            this.mainTabControl.Controls.Add(this.mainTabPage);
-            this.mainTabControl.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.mainTabControl.Location = new System.Drawing.Point(0, 24);
-            this.mainTabControl.Name = "mainTabControl";
-            this.mainTabControl.SelectedIndex = 0;
-            this.mainTabControl.Size = new System.Drawing.Size(561, 426);
-            this.mainTabControl.TabIndex = 21;
-            // 
-            // mainTabPage
-            // 
-            this.mainTabPage.Controls.Add(this.fileExplorerButton); 
-            this.mainTabPage.Controls.Add(this.deviceComboBox);
-            this.mainTabPage.Controls.Add(this.refreshDevicesButton);
-            this.mainTabPage.Controls.Add(this.connectionStatusLabel);
-            this.mainTabPage.Controls.Add(this.label1);
-            this.mainTabPage.Controls.Add(this.wirelessConnectButton);
-            this.mainTabPage.Controls.Add(this.disconnectAllButton);
-            this.mainTabPage.Controls.Add(this.apkPathTextBox);
-            this.mainTabPage.Controls.Add(this.label2);
-            this.mainTabPage.Controls.Add(this.selectApkButton);
-            this.mainTabPage.Controls.Add(this.installButton);
-            this.mainTabPage.Controls.Add(this.packageNameTextBox);
-            this.mainTabPage.Controls.Add(this.label3);
-            this.mainTabPage.Controls.Add(this.apkVersionLabel);
-            this.mainTabPage.Controls.Add(this.restartAppButton);
-            this.mainTabPage.Controls.Add(this.uninstallAppButton);
-            this.mainTabPage.Controls.Add(this.clearDataButton);
-            this.mainTabPage.Controls.Add(this.screenshotButton);
-            this.mainTabPage.Controls.Add(this.logcatButton);
-            this.mainTabPage.Controls.Add(this.screenMirrorButton);
-            this.mainTabPage.Controls.Add(this.screenRecordButton);
-            this.mainTabPage.Controls.Add(this.outputTextBox);
-            this.mainTabPage.Controls.Add(this.forceStopAppButton);
-            this.mainTabPage.Location = new System.Drawing.Point(4, 22);
-            this.mainTabPage.Name = "mainTabPage";
-            this.mainTabPage.Padding = new System.Windows.Forms.Padding(3);
-            this.mainTabPage.Size = new System.Drawing.Size(553, 400);
-            this.mainTabPage.TabIndex = 0;
-            this.mainTabPage.Text = "Main";
-            this.mainTabPage.UseVisualStyleBackColor = true;
-            // 
-            // fileExplorerButton
-            // 
-            this.fileExplorerButton.Location = new System.Drawing.Point(344, 246);
-            this.fileExplorerButton.Name = "fileExplorerButton";
-            this.fileExplorerButton.Size = new System.Drawing.Size(100, 23);
-            this.fileExplorerButton.TabIndex = 24;
-            this.fileExplorerButton.Text = "File Explorer";
-            this.fileExplorerButton.UseVisualStyleBackColor = true;
             // 
             // deviceComboBox
             // 
             this.deviceComboBox.FormattingEnabled = true;
-            this.deviceComboBox.Location = new System.Drawing.Point(8, 29);
+            this.deviceComboBox.Location = new System.Drawing.Point(8, 53);
             this.deviceComboBox.Name = "deviceComboBox";
             this.deviceComboBox.Size = new System.Drawing.Size(237, 21);
             this.deviceComboBox.TabIndex = 0;
             // 
             // refreshDevicesButton
             // 
-            this.refreshDevicesButton.Location = new System.Drawing.Point(251, 28);
+            this.refreshDevicesButton.Location = new System.Drawing.Point(251, 52);
             this.refreshDevicesButton.Name = "refreshDevicesButton";
             this.refreshDevicesButton.Size = new System.Drawing.Size(75, 23);
             this.refreshDevicesButton.TabIndex = 1;
@@ -127,7 +72,7 @@ namespace AndroidIntelliTool
             // connectionStatusLabel
             // 
             this.connectionStatusLabel.AutoSize = true;
-            this.connectionStatusLabel.Location = new System.Drawing.Point(8, 53);
+            this.connectionStatusLabel.Location = new System.Drawing.Point(8, 77);
             this.connectionStatusLabel.Name = "connectionStatusLabel";
             this.connectionStatusLabel.Size = new System.Drawing.Size(79, 13);
             this.connectionStatusLabel.TabIndex = 2;
@@ -136,14 +81,14 @@ namespace AndroidIntelliTool
             // apkPathTextBox
             // 
             this.apkPathTextBox.AllowDrop = true;
-            this.apkPathTextBox.Location = new System.Drawing.Point(8, 106);
+            this.apkPathTextBox.Location = new System.Drawing.Point(8, 146);
             this.apkPathTextBox.Name = "apkPathTextBox";
             this.apkPathTextBox.Size = new System.Drawing.Size(453, 20);
             this.apkPathTextBox.TabIndex = 3;
             // 
             // selectApkButton
             // 
-            this.selectApkButton.Location = new System.Drawing.Point(467, 104);
+            this.selectApkButton.Location = new System.Drawing.Point(467, 144);
             this.selectApkButton.Name = "selectApkButton";
             this.selectApkButton.Size = new System.Drawing.Size(75, 23);
             this.selectApkButton.TabIndex = 4;
@@ -153,78 +98,78 @@ namespace AndroidIntelliTool
             // installButton
             // 
             this.installButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.installButton.Location = new System.Drawing.Point(8, 132);
+            this.installButton.Location = new System.Drawing.Point(8, 172);
             this.installButton.Name = "installButton";
             this.installButton.Size = new System.Drawing.Size(534, 30);
             this.installButton.TabIndex = 5;
-            this.installButton.Text = "Install";
+            this.installButton.Text = "Install and Run";
             this.installButton.UseVisualStyleBackColor = true;
             // 
             // packageNameTextBox
             // 
-            this.packageNameTextBox.Location = new System.Drawing.Point(8, 191);
+            this.packageNameTextBox.Location = new System.Drawing.Point(8, 231);
             this.packageNameTextBox.Name = "packageNameTextBox";
             this.packageNameTextBox.Size = new System.Drawing.Size(237, 20);
             this.packageNameTextBox.TabIndex = 6;
             // 
             // restartAppButton
             // 
-            this.restartAppButton.Location = new System.Drawing.Point(8, 217);
+            this.restartAppButton.Location = new System.Drawing.Point(8, 257);
             this.restartAppButton.Name = "restartAppButton";
-            this.restartAppButton.Size = new System.Drawing.Size(81, 23);
+            this.restartAppButton.Size = new System.Drawing.Size(104, 23);
             this.restartAppButton.TabIndex = 7;
             this.restartAppButton.Text = "Restart App";
             this.restartAppButton.UseVisualStyleBackColor = true;
             // 
             // uninstallAppButton
             // 
-            this.uninstallAppButton.Location = new System.Drawing.Point(95, 217);
+            this.uninstallAppButton.Location = new System.Drawing.Point(118, 257);
             this.uninstallAppButton.Name = "uninstallAppButton";
-            this.uninstallAppButton.Size = new System.Drawing.Size(75, 23);
+            this.uninstallAppButton.Size = new System.Drawing.Size(104, 23);
             this.uninstallAppButton.TabIndex = 8;
             this.uninstallAppButton.Text = "Uninstall";
             this.uninstallAppButton.UseVisualStyleBackColor = true;
             // 
             // clearDataButton
             // 
-            this.clearDataButton.Location = new System.Drawing.Point(176, 217);
+            this.clearDataButton.Location = new System.Drawing.Point(228, 257);
             this.clearDataButton.Name = "clearDataButton";
-            this.clearDataButton.Size = new System.Drawing.Size(75, 23);
+            this.clearDataButton.Size = new System.Drawing.Size(104, 23);
             this.clearDataButton.TabIndex = 9;
             this.clearDataButton.Text = "Clear Data";
             this.clearDataButton.UseVisualStyleBackColor = true;
             // 
             // screenshotButton
             // 
-            this.screenshotButton.Location = new System.Drawing.Point(257, 217);
+            this.screenshotButton.Location = new System.Drawing.Point(338, 257);
             this.screenshotButton.Name = "screenshotButton";
-            this.screenshotButton.Size = new System.Drawing.Size(100, 23);
+            this.screenshotButton.Size = new System.Drawing.Size(104, 23);
             this.screenshotButton.TabIndex = 10;
             this.screenshotButton.Text = "Take Screenshot";
             this.screenshotButton.UseVisualStyleBackColor = true;
             // 
             // logcatButton
             // 
-            this.logcatButton.Location = new System.Drawing.Point(363, 217);
+            this.logcatButton.Location = new System.Drawing.Point(8, 100);
             this.logcatButton.Name = "logcatButton";
-            this.logcatButton.Size = new System.Drawing.Size(75, 23);
+            this.logcatButton.Size = new System.Drawing.Size(269, 23);
             this.logcatButton.TabIndex = 11;
             this.logcatButton.Text = "Show Logs";
             this.logcatButton.UseVisualStyleBackColor = true;
             // 
             // outputTextBox
             // 
-            this.outputTextBox.Location = new System.Drawing.Point(8, 299);
+            this.outputTextBox.Location = new System.Drawing.Point(8, 315);
             this.outputTextBox.Name = "outputTextBox";
             this.outputTextBox.ReadOnly = true;
-            this.outputTextBox.Size = new System.Drawing.Size(534, 84);
+            this.outputTextBox.Size = new System.Drawing.Size(534, 123);
             this.outputTextBox.TabIndex = 12;
             this.outputTextBox.Text = "";
             // 
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(8, 13);
+            this.label1.Location = new System.Drawing.Point(8, 37);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(41, 13);
             this.label1.TabIndex = 13;
@@ -233,7 +178,7 @@ namespace AndroidIntelliTool
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(8, 90);
+            this.label2.Location = new System.Drawing.Point(8, 130);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(127, 13);
             this.label2.TabIndex = 14;
@@ -242,7 +187,7 @@ namespace AndroidIntelliTool
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(8, 175);
+            this.label3.Location = new System.Drawing.Point(8, 215);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(84, 13);
             this.label3.TabIndex = 15;
@@ -251,7 +196,7 @@ namespace AndroidIntelliTool
             // apkVersionLabel
             // 
             this.apkVersionLabel.AutoSize = true;
-            this.apkVersionLabel.Location = new System.Drawing.Point(254, 194);
+            this.apkVersionLabel.Location = new System.Drawing.Point(254, 234);
             this.apkVersionLabel.Name = "apkVersionLabel";
             this.apkVersionLabel.Size = new System.Drawing.Size(63, 13);
             this.apkVersionLabel.TabIndex = 16;
@@ -259,7 +204,7 @@ namespace AndroidIntelliTool
             // 
             // wirelessConnectButton
             // 
-            this.wirelessConnectButton.Location = new System.Drawing.Point(332, 28);
+            this.wirelessConnectButton.Location = new System.Drawing.Point(332, 52);
             this.wirelessConnectButton.Name = "wirelessConnectButton";
             this.wirelessConnectButton.Size = new System.Drawing.Size(90, 23);
             this.wirelessConnectButton.TabIndex = 17;
@@ -268,7 +213,7 @@ namespace AndroidIntelliTool
             // 
             // disconnectAllButton
             // 
-            this.disconnectAllButton.Location = new System.Drawing.Point(428, 28);
+            this.disconnectAllButton.Location = new System.Drawing.Point(428, 52);
             this.disconnectAllButton.Name = "disconnectAllButton";
             this.disconnectAllButton.Size = new System.Drawing.Size(114, 23);
             this.disconnectAllButton.TabIndex = 18;
@@ -279,7 +224,8 @@ namespace AndroidIntelliTool
             // 
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.fileToolStripMenuItem,
-            this.toolsToolStripMenuItem});
+            this.toolsToolStripMenuItem,
+            this.helpMenuToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
             this.menuStrip1.Size = new System.Drawing.Size(561, 24);
@@ -314,46 +260,88 @@ namespace AndroidIntelliTool
             this.settingsToolStripMenuItem.Size = new System.Drawing.Size(116, 22);
             this.settingsToolStripMenuItem.Text = "Settings";
             // 
+            // helpMenuToolStripMenuItem
+            // 
+            this.helpMenuToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.aboutToolStripMenuItem});
+            this.helpMenuToolStripMenuItem.Name = "helpMenuToolStripMenuItem";
+            this.helpMenuToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
+            this.helpMenuToolStripMenuItem.Text = "Help";
+            // 
+            // aboutToolStripMenuItem
+            // 
+            this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
+            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.aboutToolStripMenuItem.Text = "About";
+            // 
             // screenMirrorButton
             // 
-            this.screenMirrorButton.Location = new System.Drawing.Point(8, 246);
+            this.screenMirrorButton.Location = new System.Drawing.Point(8, 286);
             this.screenMirrorButton.Name = "screenMirrorButton";
-            this.screenMirrorButton.Size = new System.Drawing.Size(162, 23);
+            this.screenMirrorButton.Size = new System.Drawing.Size(269, 23);
             this.screenMirrorButton.TabIndex = 21;
             this.screenMirrorButton.Text = "View Screen (scrcpy)";
             this.screenMirrorButton.UseVisualStyleBackColor = true;
             // 
             // screenRecordButton
             // 
-            this.screenRecordButton.Location = new System.Drawing.Point(176, 246);
+            this.screenRecordButton.Location = new System.Drawing.Point(283, 286);
             this.screenRecordButton.Name = "screenRecordButton";
-            this.screenRecordButton.Size = new System.Drawing.Size(162, 23);
+            this.screenRecordButton.Size = new System.Drawing.Size(269, 23);
             this.screenRecordButton.TabIndex = 22;
             this.screenRecordButton.Text = "Record Screen (scrcpy)";
             this.screenRecordButton.UseVisualStyleBackColor = true;
             // 
             // forceStopAppButton
             // 
-            this.forceStopAppButton.Location = new System.Drawing.Point(440, 217);
+            this.forceStopAppButton.Location = new System.Drawing.Point(448, 257);
             this.forceStopAppButton.Name = "forceStopAppButton";
-            this.forceStopAppButton.Size = new System.Drawing.Size(102, 23);
+            this.forceStopAppButton.Size = new System.Drawing.Size(104, 23);
             this.forceStopAppButton.TabIndex = 23;
             this.forceStopAppButton.Text = "Force Stop App";
             this.forceStopAppButton.UseVisualStyleBackColor = true;
+            // 
+            // fileExplorerButton
+            // 
+            this.fileExplorerButton.Location = new System.Drawing.Point(283, 100);
+            this.fileExplorerButton.Name = "fileExplorerButton";
+            this.fileExplorerButton.Size = new System.Drawing.Size(269, 23);
+            this.fileExplorerButton.TabIndex = 24;
+            this.fileExplorerButton.Text = "File Explorer";
+            this.fileExplorerButton.UseVisualStyleBackColor = true;
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(561, 450);
-            this.Controls.Add(this.mainTabControl);
+            this.Controls.Add(this.fileExplorerButton);
+            this.Controls.Add(this.forceStopAppButton);
+            this.Controls.Add(this.screenRecordButton);
+            this.Controls.Add(this.screenMirrorButton);
+            this.Controls.Add(this.disconnectAllButton);
+            this.Controls.Add(this.wirelessConnectButton);
+            this.Controls.Add(this.apkVersionLabel);
+            this.Controls.Add(this.label3);
+            this.Controls.Add(this.label2);
+            this.Controls.Add(this.label1);
+            this.Controls.Add(this.outputTextBox);
+            this.Controls.Add(this.logcatButton);
+            this.Controls.Add(this.screenshotButton);
+            this.Controls.Add(this.clearDataButton);
+            this.Controls.Add(this.uninstallAppButton);
+            this.Controls.Add(this.restartAppButton);
+            this.Controls.Add(this.packageNameTextBox);
+            this.Controls.Add(this.installButton);
+            this.Controls.Add(this.selectApkButton);
+            this.Controls.Add(this.apkPathTextBox);
+            this.Controls.Add(this.connectionStatusLabel);
+            this.Controls.Add(this.refreshDevicesButton);
+            this.Controls.Add(this.deviceComboBox);
             this.Controls.Add(this.menuStrip1);
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "Form1";
             this.Text = "AndroidIntelliTool";
-            this.mainTabControl.ResumeLayout(false);
-            this.mainTabPage.ResumeLayout(false);
-            this.mainTabPage.PerformLayout();
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
             this.ResumeLayout(false);
@@ -362,9 +350,7 @@ namespace AndroidIntelliTool
         }
 
         #endregion
-        private System.Windows.Forms.TabControl mainTabControl;
-        private System.Windows.Forms.TabPage mainTabPage;
-        private System.Windows.Forms.TabPage fileExplorerTabPage;
+        
         private System.Windows.Forms.ComboBox deviceComboBox;
         private System.Windows.Forms.Button refreshDevicesButton;
         private System.Windows.Forms.Label connectionStatusLabel;
@@ -389,6 +375,8 @@ namespace AndroidIntelliTool
         private System.Windows.Forms.ToolStripMenuItem exitToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem toolsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem settingsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem helpMenuToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
         private System.Windows.Forms.Button screenMirrorButton;
         private System.Windows.Forms.Button screenRecordButton;
         private System.Windows.Forms.Button forceStopAppButton;
