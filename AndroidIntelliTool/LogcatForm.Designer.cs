@@ -38,6 +38,7 @@ namespace AndroidIntelliTool
             this.autoScrollCheckBox = new System.Windows.Forms.CheckBox();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.pidStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
+            this.copyButton = new System.Windows.Forms.Button();
             this.statusStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -83,16 +84,16 @@ namespace AndroidIntelliTool
             // 
             // applyFilterButton
             // 
-            this.applyFilterButton.Location = new System.Drawing.Point(518, 49);
+            this.applyFilterButton.Location = new System.Drawing.Point(356, 38);
             this.applyFilterButton.Name = "applyFilterButton";
-            this.applyFilterButton.Size = new System.Drawing.Size(75, 23);
+            this.applyFilterButton.Size = new System.Drawing.Size(103, 23);
             this.applyFilterButton.TabIndex = 2;
             this.applyFilterButton.Text = "Apply Filters";
             this.applyFilterButton.UseVisualStyleBackColor = true;
             // 
             // clearLogButton
             // 
-            this.clearLogButton.Location = new System.Drawing.Point(599, 49);
+            this.clearLogButton.Location = new System.Drawing.Point(518, 49);
             this.clearLogButton.Name = "clearLogButton";
             this.clearLogButton.Size = new System.Drawing.Size(75, 23);
             this.clearLogButton.TabIndex = 3;
@@ -136,7 +137,7 @@ namespace AndroidIntelliTool
             // 
             // exportSelectedButton
             // 
-            this.exportSelectedButton.Location = new System.Drawing.Point(680, 23);
+            this.exportSelectedButton.Location = new System.Drawing.Point(680, 36);
             this.exportSelectedButton.Name = "exportSelectedButton";
             this.exportSelectedButton.Size = new System.Drawing.Size(92, 23);
             this.exportSelectedButton.TabIndex = 7;
@@ -161,7 +162,7 @@ namespace AndroidIntelliTool
             // 
             // exportAllButton
             // 
-            this.exportAllButton.Location = new System.Drawing.Point(680, 49);
+            this.exportAllButton.Location = new System.Drawing.Point(680, 62);
             this.exportAllButton.Name = "exportAllButton";
             this.exportAllButton.Size = new System.Drawing.Size(92, 23);
             this.exportAllButton.TabIndex = 10;
@@ -220,11 +221,21 @@ namespace AndroidIntelliTool
             this.pidStatusLabel.Name = "pidStatusLabel";
             this.pidStatusLabel.Size = new System.Drawing.Size(0, 17);
             // 
+            // copyButton
+            // 
+            this.copyButton.Location = new System.Drawing.Point(680, 10);
+            this.copyButton.Name = "copyButton";
+            this.copyButton.Size = new System.Drawing.Size(92, 23);
+            this.copyButton.TabIndex = 16;
+            this.copyButton.Text = "Copy";
+            this.copyButton.UseVisualStyleBackColor = true;
+            // 
             // LogcatForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(784, 450);
+            this.Controls.Add(this.copyButton);
             this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.pidFilterButton);
             this.Controls.Add(this.autoScrollCheckBox);
@@ -272,5 +283,6 @@ namespace AndroidIntelliTool
         private System.Windows.Forms.CheckBox autoScrollCheckBox;
         private System.Windows.Forms.StatusStrip statusStrip1;
         private System.Windows.Forms.ToolStripStatusLabel pidStatusLabel;
+        private System.Windows.Forms.Button copyButton;
     }
 }

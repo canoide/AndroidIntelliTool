@@ -15,6 +15,8 @@ namespace AndroidIntelliTool
     {
         private Dictionary<string, string> _config = new Dictionary<string, string>();
         private const string ConfigFileName = "AndroidIntelliTool.cfg";
+        private Process _screenRecordProcess;
+        private string _deviceRecordingPath;
 
 
         public Form1(string[] args)
@@ -42,8 +44,8 @@ namespace AndroidIntelliTool
             screenshotButton.Click += async (s, ev) => await TakeScreenshot();
             logcatButton.Click += (s, ev) => ShowLogcat();
             deviceComboBox.SelectedIndexChanged += (s, ev) => UpdateConnectionStatus();
-            screenMirrorButton.Click += (s, ev) => RunScrcpy(false);
-            screenRecordButton.Click += (s, ev) => RunScrcpy(true);
+            screenMirrorButton.Click += (s, ev) => RunScreenMirror();
+            screenRecordButton.Click += async (s, ev) => await ToggleScreenRecord();
             forceStopAppButton.Click += async (s, ev) => await RunAppCommand("Force Stopping", "shell am force-stop {{pkg}}");
             fileExplorerButton.Click += (s, ev) => OpenFileExplorer(); // New button handler
 
@@ -187,19 +189,35 @@ namespace AndroidIntelliTool
             var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
             var fileName = $"screenshot_{timestamp}.png";
             var devicePath = $"/sdcard/{fileName}";
-            var desktopPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), fileName);
 
             outputTextBox.Text = "Taking screenshot...\n";
             var (output1, exitCode1) = await RunCommandAsync(_config["adb"], $"-s {device} shell screencap \"{devicePath}\"");
-            if (exitCode1 != 0) { outputTextBox.AppendText($"\nError taking screenshot: {output1}"); return; }
+            if (exitCode1 != 0)
+            {
+                outputTextBox.AppendText($"\nError taking screenshot: {output1}");
+                return;
+            }
 
-            var (output2, exitCode2) = await RunCommandAsync(_config["adb"], $"-s {device} pull \"{devicePath}\" \"{desktopPath}\"");
-            if (exitCode2 != 0) { outputTextBox.AppendText($"\nError pulling screenshot: {output2}"); return; }
+            using (var sfd = new SaveFileDialog())
+            {
+                sfd.Filter = "PNG Image|*.png";
+                sfd.FileName = fileName;
+                if (sfd.ShowDialog() == DialogResult.OK)
+                {
+                    var (output2, exitCode2) = await RunCommandAsync(_config["adb"], $"-s {device} pull \"{devicePath}\" \"{sfd.FileName}\"");
+                    if (exitCode2 != 0)
+                    {
+                        outputTextBox.AppendText($"\nError pulling screenshot: {output2}");
+                    }
+                    else
+                    {
+                        outputTextBox.AppendText($"\nScreenshot saved to: {sfd.FileName}");
+                    }
+                }
+            }
 
             var (output3, exitCode3) = await RunCommandAsync(_config["adb"], $"-s {device} shell rm \"{devicePath}\"");
             if (exitCode3 != 0) { outputTextBox.AppendText($"\nError removing temp screenshot: {output3}"); return; }
-
-            outputTextBox.AppendText($"\nScreenshot saved to: {desktopPath}");
         }
 
         private void ShowLogcat()
@@ -224,6 +242,131 @@ namespace AndroidIntelliTool
                 deviceComboBox.Text = "";
                 connectionStatusLabel.Text = "Status: Not Connected";
                 connectionStatusLabel.ForeColor = Color.Red;
+            }
+        }
+
+        #endregion
+
+        #region Screen Recording
+
+        private async Task ToggleScreenRecord()
+        {
+            string device = deviceComboBox.SelectedItem as string;
+            if (string.IsNullOrEmpty(device))
+            {
+                MessageBox.Show("Please select a device first.", "No Device", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (_screenRecordProcess == null || _screenRecordProcess.HasExited) // Start recording
+            {
+                _deviceRecordingPath = $"/sdcard/recording_{DateTime.Now.ToString("yyyyMMdd_HHmmss")}.mp4";
+                outputTextBox.AppendText($"Starting screen recording to {_deviceRecordingPath}...\n");
+
+                // Start adb shell screenrecord in a new process
+                _screenRecordProcess = new Process
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = _config["adb"],
+                        Arguments = $"-s {device} shell screenrecord \"{_deviceRecordingPath}\"",
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true, // Keep this true to avoid a console window popping up
+                    },
+                    EnableRaisingEvents = true
+                };
+
+                _screenRecordProcess.Exited += async (sender, e) =>
+                {
+                    // This event fires when the process exits, either by user stopping or error
+                    if (_screenRecordProcess.ExitCode != 0)
+                    {
+                        // Handle error or unexpected exit
+                        string errorOutput = await _screenRecordProcess.StandardError.ReadToEndAsync();
+                        this.Invoke((MethodInvoker)delegate
+                        {
+                            outputTextBox.AppendText($"\nScreen recording process exited with error: {errorOutput}");
+                            screenRecordButton.Text = "Record Screen";
+                            _screenRecordProcess = null;
+                        });
+                    }
+                };
+
+                _screenRecordProcess.Start();
+                screenRecordButton.Text = "Stop Recording";
+                screenRecordButton.BackColor = Color.Red;
+            }
+            else // Stop recording
+            {
+                outputTextBox.AppendText("Stopping screen recording...\n");
+
+                // Send Ctrl+C equivalent to the adb shell screenrecord process
+                // This is tricky with CreateNoWindow = true. A more robust way is to kill the process on the device.
+                // Find the screenrecord PID on the device and kill it.
+                var (pidOutput, pidExitCode) = await RunCommandAsync(_config["adb"], $"-s {device} shell pidof screenrecord");
+                if (pidExitCode == 0 && !string.IsNullOrWhiteSpace(pidOutput))
+                {
+                    string pid = pidOutput.Trim();
+                    await RunCommandAsync(_config["adb"], $"-s {device} shell kill {pid}");
+                }
+                else
+                {
+                    // Fallback: try to kill the local adb process if pidof fails or returns nothing
+                    // This might kill the parent adb process, which is not ideal.
+                    // A better approach would be to manage the process group, but that\'s more complex.
+                    // For now, let\'s rely on the kill command on the device.
+                    outputTextBox.AppendText("\nWarning: Could not find screenrecord PID on device. Attempting to terminate local process.");
+                    try
+                    {
+                        _screenRecordProcess.Kill();
+                    }
+                    catch (InvalidOperationException)
+                    {
+                        // Process already exited
+                    }
+                }
+
+                await Task.Run(() => _screenRecordProcess.WaitForExit()); // Ensure the process has fully exited
+
+                screenRecordButton.Text = "Record Screen";
+                screenRecordButton.BackColor = SystemColors.Control;
+                _screenRecordProcess = null;
+
+                // Prompt to save the file
+                using (var sfd = new SaveFileDialog())
+                {
+                    sfd.Filter = "MP4 Video|*.mp4";
+                    sfd.FileName = Path.GetFileName(_deviceRecordingPath);
+                    if (sfd.ShowDialog() == DialogResult.OK)
+                    {
+                        var (pullOutput, pullExitCode) = await RunCommandAsync(_config["adb"], $"-s {device} pull \"{_deviceRecordingPath}\" \"{sfd.FileName}\"");
+                        if (pullExitCode != 0)
+                        {
+                            outputTextBox.AppendText($"\nError pulling screen recording: {pullOutput}");
+                        }
+                        else
+                        {
+                            outputTextBox.AppendText($"\nScreen recording saved to: {sfd.FileName}");
+                        }
+                    }
+                    else
+                    {
+                        outputTextBox.AppendText("\nScreen recording save cancelled by user.");
+                    }
+                }
+
+                // Delete temporary file from device
+                var (rmOutput, rmExitCode) = await RunCommandAsync(_config["adb"], $"-s {device} shell rm \"{_deviceRecordingPath}\"");
+                if (rmExitCode != 0)
+                {
+                    outputTextBox.AppendText($"\nError removing temp screen recording from device: {rmOutput}");
+                }
+                else
+                {
+                    outputTextBox.AppendText("\nTemporary screen recording removed from device.");
+                }
             }
         }
 
@@ -484,7 +627,7 @@ namespace AndroidIntelliTool
 
         #region Scrcpy
 
-        private void RunScrcpy(bool record)
+        private void RunScreenMirror()
         {
             if (!_config.ContainsKey("scrcpy") || !File.Exists(_config["scrcpy"])) 
             {
@@ -501,18 +644,6 @@ namespace AndroidIntelliTool
 
             string scrcpyPath = _config["scrcpy"];
             string arguments = $"-s {device}";
-
-            if (record)
-            {
-                using (var sfd = new SaveFileDialog())
-                {
-                    sfd.Filter = "MP4 Video|*.mp4";
-                    sfd.FileName = "recording_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".mp4";
-                    if (sfd.ShowDialog() != DialogResult.OK) return;
-
-                    arguments += $" --record \"{sfd.FileName}\"" ;
-                }
-            }
 
             Process.Start(scrcpyPath, arguments);
         }

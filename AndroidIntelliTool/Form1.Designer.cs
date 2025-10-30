@@ -81,14 +81,14 @@ namespace AndroidIntelliTool
             // apkPathTextBox
             // 
             this.apkPathTextBox.AllowDrop = true;
-            this.apkPathTextBox.Location = new System.Drawing.Point(8, 146);
+            this.apkPathTextBox.Location = new System.Drawing.Point(8, 174);
             this.apkPathTextBox.Name = "apkPathTextBox";
             this.apkPathTextBox.Size = new System.Drawing.Size(453, 20);
             this.apkPathTextBox.TabIndex = 3;
             // 
             // selectApkButton
             // 
-            this.selectApkButton.Location = new System.Drawing.Point(467, 144);
+            this.selectApkButton.Location = new System.Drawing.Point(467, 172);
             this.selectApkButton.Name = "selectApkButton";
             this.selectApkButton.Size = new System.Drawing.Size(75, 23);
             this.selectApkButton.TabIndex = 4;
@@ -98,7 +98,7 @@ namespace AndroidIntelliTool
             // installButton
             // 
             this.installButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.installButton.Location = new System.Drawing.Point(8, 172);
+            this.installButton.Location = new System.Drawing.Point(8, 194);
             this.installButton.Name = "installButton";
             this.installButton.Size = new System.Drawing.Size(534, 30);
             this.installButton.TabIndex = 5;
@@ -107,43 +107,43 @@ namespace AndroidIntelliTool
             // 
             // packageNameTextBox
             // 
-            this.packageNameTextBox.Location = new System.Drawing.Point(8, 231);
+            this.packageNameTextBox.Location = new System.Drawing.Point(8, 246);
             this.packageNameTextBox.Name = "packageNameTextBox";
             this.packageNameTextBox.Size = new System.Drawing.Size(237, 20);
             this.packageNameTextBox.TabIndex = 6;
             // 
             // restartAppButton
             // 
-            this.restartAppButton.Location = new System.Drawing.Point(8, 257);
+            this.restartAppButton.Location = new System.Drawing.Point(8, 272);
             this.restartAppButton.Name = "restartAppButton";
-            this.restartAppButton.Size = new System.Drawing.Size(104, 23);
+            this.restartAppButton.Size = new System.Drawing.Size(136, 23);
             this.restartAppButton.TabIndex = 7;
             this.restartAppButton.Text = "Restart App";
             this.restartAppButton.UseVisualStyleBackColor = true;
             // 
             // uninstallAppButton
             // 
-            this.uninstallAppButton.Location = new System.Drawing.Point(118, 257);
+            this.uninstallAppButton.Location = new System.Drawing.Point(146, 272);
             this.uninstallAppButton.Name = "uninstallAppButton";
-            this.uninstallAppButton.Size = new System.Drawing.Size(104, 23);
+            this.uninstallAppButton.Size = new System.Drawing.Size(136, 23);
             this.uninstallAppButton.TabIndex = 8;
             this.uninstallAppButton.Text = "Uninstall";
             this.uninstallAppButton.UseVisualStyleBackColor = true;
             // 
             // clearDataButton
             // 
-            this.clearDataButton.Location = new System.Drawing.Point(228, 257);
+            this.clearDataButton.Location = new System.Drawing.Point(284, 272);
             this.clearDataButton.Name = "clearDataButton";
-            this.clearDataButton.Size = new System.Drawing.Size(104, 23);
+            this.clearDataButton.Size = new System.Drawing.Size(136, 23);
             this.clearDataButton.TabIndex = 9;
             this.clearDataButton.Text = "Clear Data";
             this.clearDataButton.UseVisualStyleBackColor = true;
             // 
             // screenshotButton
             // 
-            this.screenshotButton.Location = new System.Drawing.Point(338, 257);
+            this.screenshotButton.Location = new System.Drawing.Point(8, 129);
             this.screenshotButton.Name = "screenshotButton";
-            this.screenshotButton.Size = new System.Drawing.Size(104, 23);
+            this.screenshotButton.Size = new System.Drawing.Size(180, 23);
             this.screenshotButton.TabIndex = 10;
             this.screenshotButton.Text = "Take Screenshot";
             this.screenshotButton.UseVisualStyleBackColor = true;
@@ -159,7 +159,7 @@ namespace AndroidIntelliTool
             // 
             // outputTextBox
             // 
-            this.outputTextBox.Location = new System.Drawing.Point(8, 315);
+            this.outputTextBox.Location = new System.Drawing.Point(8, 301);
             this.outputTextBox.Name = "outputTextBox";
             this.outputTextBox.ReadOnly = true;
             this.outputTextBox.Size = new System.Drawing.Size(534, 123);
@@ -178,7 +178,7 @@ namespace AndroidIntelliTool
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(8, 130);
+            this.label2.Location = new System.Drawing.Point(8, 158);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(127, 13);
             this.label2.TabIndex = 14;
@@ -187,7 +187,7 @@ namespace AndroidIntelliTool
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(8, 215);
+            this.label3.Location = new System.Drawing.Point(8, 230);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(84, 13);
             this.label3.TabIndex = 15;
@@ -196,7 +196,7 @@ namespace AndroidIntelliTool
             // apkVersionLabel
             // 
             this.apkVersionLabel.AutoSize = true;
-            this.apkVersionLabel.Location = new System.Drawing.Point(254, 234);
+            this.apkVersionLabel.Location = new System.Drawing.Point(254, 249);
             this.apkVersionLabel.Name = "apkVersionLabel";
             this.apkVersionLabel.Size = new System.Drawing.Size(63, 13);
             this.apkVersionLabel.TabIndex = 16;
@@ -276,27 +276,27 @@ namespace AndroidIntelliTool
             // 
             // screenMirrorButton
             // 
-            this.screenMirrorButton.Location = new System.Drawing.Point(8, 286);
+            this.screenMirrorButton.Location = new System.Drawing.Point(190, 129);
             this.screenMirrorButton.Name = "screenMirrorButton";
-            this.screenMirrorButton.Size = new System.Drawing.Size(269, 23);
+            this.screenMirrorButton.Size = new System.Drawing.Size(180, 23);
             this.screenMirrorButton.TabIndex = 21;
-            this.screenMirrorButton.Text = "View Screen (scrcpy)";
+            this.screenMirrorButton.Text = "View Screen";
             this.screenMirrorButton.UseVisualStyleBackColor = true;
             // 
             // screenRecordButton
             // 
-            this.screenRecordButton.Location = new System.Drawing.Point(283, 286);
+            this.screenRecordButton.Location = new System.Drawing.Point(372, 129);
             this.screenRecordButton.Name = "screenRecordButton";
-            this.screenRecordButton.Size = new System.Drawing.Size(269, 23);
+            this.screenRecordButton.Size = new System.Drawing.Size(180, 23);
             this.screenRecordButton.TabIndex = 22;
-            this.screenRecordButton.Text = "Record Screen (scrcpy)";
+            this.screenRecordButton.Text = "Record Screen";
             this.screenRecordButton.UseVisualStyleBackColor = true;
             // 
             // forceStopAppButton
             // 
-            this.forceStopAppButton.Location = new System.Drawing.Point(448, 257);
+            this.forceStopAppButton.Location = new System.Drawing.Point(422, 272);
             this.forceStopAppButton.Name = "forceStopAppButton";
-            this.forceStopAppButton.Size = new System.Drawing.Size(104, 23);
+            this.forceStopAppButton.Size = new System.Drawing.Size(136, 23);
             this.forceStopAppButton.TabIndex = 23;
             this.forceStopAppButton.Text = "Force Stop App";
             this.forceStopAppButton.UseVisualStyleBackColor = true;

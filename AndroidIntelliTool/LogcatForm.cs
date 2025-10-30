@@ -78,6 +78,7 @@ namespace AndroidIntelliTool
             clearLogButton.Click += (s, ev) => ClearLogs();
             exportSelectedButton.Click += (s, ev) => ExportLogs(true);
             exportAllButton.Click += (s, ev) => ExportLogs(false);
+            copyButton.Click += (s, ev) => CopySelectedLogs();
             logListView.KeyDown += LogListView_KeyDown;
 
             // Load saved filters
@@ -299,14 +300,19 @@ namespace AndroidIntelliTool
             }
         }
 
+        private void CopySelectedLogs()
+        {
+            if (logListView.SelectedItems.Count == 0) return;
+            var textToCopy = logListView.SelectedItems.Cast<ListViewItem>()
+                .Select(item => ((LogEntry)item.Tag).Message);
+            Clipboard.SetText(string.Join("\n", textToCopy));
+        }
+
         private void LogListView_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Control && e.KeyCode == Keys.C)
             {
-                if (logListView.SelectedItems.Count == 0) return;
-                var textToCopy = logListView.SelectedItems.Cast<ListViewItem>()
-                    .Select(item => ((LogEntry)item.Tag).Message);
-                Clipboard.SetText(string.Join("\n", textToCopy));
+                CopySelectedLogs();
             }
         }
 
