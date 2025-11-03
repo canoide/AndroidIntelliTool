@@ -35,6 +35,10 @@ namespace AndroidIntelliTool
             this.textScrcpyPath = new System.Windows.Forms.TextBox();
             this.btnBrowseScrcpy = new System.Windows.Forms.Button();
             this.linkScrcpy = new System.Windows.Forms.LinkLabel();
+            this.labelNdk = new System.Windows.Forms.Label();
+            this.textNdkPath = new System.Windows.Forms.TextBox();
+            this.btnBrowseNdk = new System.Windows.Forms.Button();
+            this.linkNdk = new System.Windows.Forms.LinkLabel();
             this.SuspendLayout();
             // 
             // labelAdb
@@ -139,7 +143,7 @@ namespace AndroidIntelliTool
             // 
             // btnSave
             // 
-            this.btnSave.Location = new System.Drawing.Point(316, 210);
+            this.btnSave.Location = new System.Drawing.Point(316, 257);
             this.btnSave.Name = "btnSave";
             this.btnSave.Size = new System.Drawing.Size(75, 23);
             this.btnSave.TabIndex = 9;
@@ -149,7 +153,7 @@ namespace AndroidIntelliTool
             // btnCancel
             // 
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(397, 210);
+            this.btnCancel.Location = new System.Drawing.Point(397, 257);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
             this.btnCancel.TabIndex = 10;
@@ -196,13 +200,52 @@ namespace AndroidIntelliTool
             this.linkScrcpy.TabStop = true;
             this.linkScrcpy.Text = "(Download)";
             // 
+            // labelNdk
+            // 
+            this.labelNdk.AutoSize = true;
+            this.labelNdk.Location = new System.Drawing.Point(13, 201);
+            this.labelNdk.Name = "labelNdk";
+            this.labelNdk.Size = new System.Drawing.Size(61, 13);
+            this.labelNdk.TabIndex = 18;
+            this.labelNdk.Text = "NDK Path:";
+            // 
+            // textNdkPath
+            // 
+            this.textNdkPath.Location = new System.Drawing.Point(16, 218);
+            this.textNdkPath.Name = "textNdkPath";
+            this.textNdkPath.Size = new System.Drawing.Size(375, 20);
+            this.textNdkPath.TabIndex = 19;
+            // 
+            // btnBrowseNdk
+            // 
+            this.btnBrowseNdk.Location = new System.Drawing.Point(397, 216);
+            this.btnBrowseNdk.Name = "btnBrowseNdk";
+            this.btnBrowseNdk.Size = new System.Drawing.Size(75, 23);
+            this.btnBrowseNdk.TabIndex = 20;
+            this.btnBrowseNdk.Text = "Browse...";
+            this.btnBrowseNdk.UseVisualStyleBackColor = true;
+            // 
+            // linkNdk
+            // 
+            this.linkNdk.AutoSize = true;
+            this.linkNdk.Location = new System.Drawing.Point(75, 201);
+            this.linkNdk.Name = "linkNdk";
+            this.linkNdk.Size = new System.Drawing.Size(59, 13);
+            this.linkNdk.TabIndex = 21;
+            this.linkNdk.TabStop = true;
+            this.linkNdk.Text = "(Download)";
+            // 
             // SettingsForm
             // 
             this.AcceptButton = this.btnSave;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(484, 245);
+            this.ClientSize = new System.Drawing.Size(484, 292);
+            this.Controls.Add(this.linkNdk);
+            this.Controls.Add(this.btnBrowseNdk);
+            this.Controls.Add(this.textNdkPath);
+            this.Controls.Add(this.labelNdk);
             this.Controls.Add(this.linkScrcpy);
             this.Controls.Add(this.btnBrowseScrcpy);
             this.Controls.Add(this.textScrcpyPath);
@@ -252,5 +295,9 @@ namespace AndroidIntelliTool
         private System.Windows.Forms.TextBox textScrcpyPath;
         private System.Windows.Forms.Button btnBrowseScrcpy;
         private System.Windows.Forms.LinkLabel linkScrcpy;
+        private System.Windows.Forms.Label labelNdk;
+        private System.Windows.Forms.TextBox textNdkPath;
+        private System.Windows.Forms.Button btnBrowseNdk;
+        private System.Windows.Forms.LinkLabel linkNdk;
     }
 }

@@ -45,6 +45,7 @@ namespace AndroidIntelliTool
             this.settingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.helpMenuToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.crashLogAnalyzerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.screenMirrorButton = new System.Windows.Forms.Button();
             this.screenRecordButton = new System.Windows.Forms.Button();
             this.forceStopAppButton = new System.Windows.Forms.Button();
@@ -249,7 +250,8 @@ namespace AndroidIntelliTool
             // toolsToolStripMenuItem
             // 
             this.toolsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.settingsToolStripMenuItem});
+            this.settingsToolStripMenuItem,
+            this.crashLogAnalyzerToolStripMenuItem});
             this.toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
             this.toolsToolStripMenuItem.Size = new System.Drawing.Size(46, 20);
             this.toolsToolStripMenuItem.Text = "Tools";
@@ -273,6 +275,13 @@ namespace AndroidIntelliTool
             this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
             this.aboutToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.aboutToolStripMenuItem.Text = "About";
+            // 
+            // crashLogAnalyzerToolStripMenuItem
+            // 
+            this.crashLogAnalyzerToolStripMenuItem.Name = "crashLogAnalyzerToolStripMenuItem";
+            this.crashLogAnalyzerToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.crashLogAnalyzerToolStripMenuItem.Text = "Crash Log Analyzer";
+            this.crashLogAnalyzerToolStripMenuItem.Click += new System.EventHandler(this.OpenCrashLogAnalyzer);
             // 
             // screenMirrorButton
             // 
@@ -380,7 +389,8 @@ namespace AndroidIntelliTool
         private System.Windows.Forms.Button screenMirrorButton;
         private System.Windows.Forms.Button screenRecordButton;
         private System.Windows.Forms.Button forceStopAppButton;
-        private System.Windows.Forms.Button fileExplorerButton; // New button
+        private System.Windows.Forms.Button fileExplorerButton;
+        private System.Windows.Forms.ToolStripMenuItem crashLogAnalyzerToolStripMenuItem;
 
     }
 }

@@ -18,6 +18,7 @@ namespace AndroidIntelliTool
             btnBrowseAapt2.Click += (s, e) => BrowseForFile(textAapt2Path, "aapt2.exe");
             btnBrowseBundleTool.Click += (s, e) => BrowseForFile(textBundleToolPath, "bundletool.jar");
             btnBrowseScrcpy.Click += (s, e) => BrowseForFile(textScrcpyPath, "scrcpy.exe");
+            btnBrowseNdk.Click += (s, e) => BrowseForFolder(textNdkPath);
             btnSave.Click += (s, e) => { SaveSettings(); this.DialogResult = DialogResult.OK; this.Close(); };
             btnCancel.Click += (s, e) => { this.DialogResult = DialogResult.Cancel; this.Close(); };
 
@@ -25,6 +26,7 @@ namespace AndroidIntelliTool
             linkAapt2.LinkClicked += (s, e) => OpenUrl("https://developer.android.com/studio");
             linkBundletool.LinkClicked += (s, e) => OpenUrl("https://github.com/google/bundletool/releases");
             linkScrcpy.LinkClicked += (s, e) => OpenUrl("https://github.com/Genymobile/scrcpy/releases");
+            linkNdk.LinkClicked += (s, e) => OpenUrl("https://developer.android.com/ndk/downloads");
 
             LoadSettings();
         }
@@ -35,6 +37,7 @@ namespace AndroidIntelliTool
             if (Config.ContainsKey("aapt2")) textAapt2Path.Text = Config["aapt2"];
             if (Config.ContainsKey("bundletool")) textBundleToolPath.Text = Config["bundletool"];
             if (Config.ContainsKey("scrcpy")) textScrcpyPath.Text = Config["scrcpy"];
+            if (Config.ContainsKey("ndk")) textNdkPath.Text = Config["ndk"];
         }
 
         private void SaveSettings()
@@ -43,6 +46,7 @@ namespace AndroidIntelliTool
             Config["aapt2"] = textAapt2Path.Text;
             Config["bundletool"] = textBundleToolPath.Text;
             Config["scrcpy"] = textScrcpyPath.Text;
+            Config["ndk"] = textNdkPath.Text;
         }
 
         private void BrowseForFile(TextBox textBox, string defaultFileName)
@@ -54,6 +58,17 @@ namespace AndroidIntelliTool
                 if (ofd.ShowDialog() == DialogResult.OK)
                 {
                     textBox.Text = ofd.FileName;
+                }
+            }
+        }
+
+        private void BrowseForFolder(TextBox textBox)
+        {
+            using (var fbd = new FolderBrowserDialog())
+            {
+                if (fbd.ShowDialog() == DialogResult.OK)
+                {
+                    textBox.Text = fbd.SelectedPath;
                 }
             }
         }

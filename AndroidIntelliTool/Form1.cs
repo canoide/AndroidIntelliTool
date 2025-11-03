@@ -16,6 +16,7 @@ namespace AndroidIntelliTool
         private Dictionary<string, string> _config = new Dictionary<string, string>();
         private const string ConfigFileName = "AndroidIntelliTool.cfg";
         private Process _screenRecordProcess;
+        private bool isCrashLogAnalyzerOpen = false;
         private string _deviceRecordingPath;
 
 
@@ -49,12 +50,11 @@ namespace AndroidIntelliTool
             forceStopAppButton.Click += async (s, ev) => await RunAppCommand("Force Stopping", "shell am force-stop {{pkg}}");
             fileExplorerButton.Click += (s, ev) => OpenFileExplorer(); // New button handler
 
+            aboutToolStripMenuItem.Click += (s, ev) => new AboutForm().ShowDialog();
+
             // Menu
             exitToolStripMenuItem.Click += (s, ev) => this.Close();
             settingsToolStripMenuItem.Click += (s, ev) => OpenSettings();
-            aboutToolStripMenuItem.Click += (s, ev) => new AboutForm().ShowDialog();
-
-            // Main Tab Control
             // mainTabControl.SelectedIndexChanged += new System.EventHandler(this.mainTabControl_SelectedIndexChanged); // Removed as File Explorer is now a separate form
 
             if (!LoadConfigAndCheckPaths())
@@ -122,6 +122,23 @@ namespace AndroidIntelliTool
                     MessageBox.Show("Configuration is required to run the application. Exiting.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     Application.Exit();
                 }
+            }
+        }
+
+        private void OpenCrashLogAnalyzer(object sender, EventArgs e)
+        {
+            if (isCrashLogAnalyzerOpen) return;
+            isCrashLogAnalyzerOpen = true;
+            try
+            {
+                using (var crashLogAnalyzerForm = new CrashLogAnalyzerForm(_config))
+                {
+                    crashLogAnalyzerForm.ShowDialog();
+                }
+            }
+            finally
+            {
+                isCrashLogAnalyzerOpen = false;
             }
         }
 

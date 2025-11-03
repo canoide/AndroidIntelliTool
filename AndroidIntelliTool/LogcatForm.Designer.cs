@@ -137,7 +137,7 @@ namespace AndroidIntelliTool
             // 
             // exportSelectedButton
             // 
-            this.exportSelectedButton.Location = new System.Drawing.Point(680, 36);
+            this.exportSelectedButton.Location = new System.Drawing.Point(688, 36);
             this.exportSelectedButton.Name = "exportSelectedButton";
             this.exportSelectedButton.Size = new System.Drawing.Size(92, 23);
             this.exportSelectedButton.TabIndex = 7;
@@ -162,7 +162,7 @@ namespace AndroidIntelliTool
             // 
             // exportAllButton
             // 
-            this.exportAllButton.Location = new System.Drawing.Point(680, 62);
+            this.exportAllButton.Location = new System.Drawing.Point(688, 62);
             this.exportAllButton.Name = "exportAllButton";
             this.exportAllButton.Size = new System.Drawing.Size(92, 23);
             this.exportAllButton.TabIndex = 10;
@@ -223,9 +223,9 @@ namespace AndroidIntelliTool
             // 
             // copyButton
             // 
-            this.copyButton.Location = new System.Drawing.Point(680, 10);
+            this.copyButton.Location = new System.Drawing.Point(603, 49);
             this.copyButton.Name = "copyButton";
-            this.copyButton.Size = new System.Drawing.Size(92, 23);
+            this.copyButton.Size = new System.Drawing.Size(75, 23);
             this.copyButton.TabIndex = 16;
             this.copyButton.Text = "Copy";
             this.copyButton.UseVisualStyleBackColor = true;

@@ -24,7 +24,7 @@ namespace AndroidIntelliTool
             btnConnectSaved.Click += async (s, e) => await ConnectToSelectedIp();
             btnRemoveIp.Click += (s, e) => RemoveSelectedIp();
             btnConnectManual.Click += async (s, e) => await ConnectToIp(textIpAddress.Text);
-            btnStartWirelessSetup.Click += async (s, e) => await StartGuidedSetup();
+            btnStartWirelessSetup.Click += OnStartWirelessSetupClick;
         }
 
         private async Task WirelessForm_Load()
@@ -58,7 +58,7 @@ namespace AndroidIntelliTool
             {
                 if (line.Contains("device") && !line.Contains(":")) // Filter out wireless devices
                 {
-                    devices.Add(line.Split(new[] { '\t' }, StringSplitOptions.RemoveEmptyEntries)[0]);
+                    devices.Add(line.Split(new[] { '\t' }, StringSplitOptions.RemoveEmptyEntries)[0].Trim());
                 }
             }
             comboUsbDevices.DataSource = devices;
@@ -112,6 +112,22 @@ namespace AndroidIntelliTool
             }
         }
 
+        private enum WirelessSetupState { Idle, ReadyToConnect }
+        private WirelessSetupState _setupState = WirelessSetupState.Idle;
+        private string _foundIpForConnection;
+
+        private async void OnStartWirelessSetupClick(object sender, EventArgs e)
+        {
+            if (_setupState == WirelessSetupState.Idle)
+            {
+                await StartGuidedSetup();
+            }
+            else if (_setupState == WirelessSetupState.ReadyToConnect)
+            {
+                await ConnectToIp(_foundIpForConnection);
+            }
+        }
+
         private async Task StartGuidedSetup()
         {
             if (!(comboUsbDevices.SelectedItem is string usbDevice))
@@ -122,24 +138,23 @@ namespace AndroidIntelliTool
 
             lblSetupInstructions.Text = "Step 1: Trying to find device IP address...";
             var (ipOutput, _) = await RunCommandAsync(_adbPath, $"-s {usbDevice} shell ip addr show wlan0");
-            var ipMatch = Regex.Match(ipOutput, @"inet (\d{{1,3}}\.\d{{1,3}}\.\d{{1,3}}\.\d{{1,3}}")
-;
+            var ipMatch = Regex.Match(ipOutput, @"inet (\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})");
 
             if (!ipMatch.Success)
             {
-                lblSetupInstructions.Text = "Could not automatically find the device IP. Please connect manually.";
+                lblSetupInstructions.Text += "\nCould not automatically find the device IP. Please connect manually.";
                 return;
             }
             string foundIp = ipMatch.Groups[1].Value;
+            _foundIpForConnection = foundIp;
 
-            lblSetupInstructions.Text = $"Step 2: Found IP: {foundIp}. Enabling wireless mode...";
+            lblSetupInstructions.Text += $"\nStep 2: Found IP: {foundIp}. Enabling wireless mode...";
             await RunCommandAsync(_adbPath, $"-s {usbDevice} tcpip 5555");
 
-            lblSetupInstructions.Text = "Step 3: Wireless mode enabled! You can now DISCONNECT the USB cable from your device.\n\nClick the button below to connect.";
+            lblSetupInstructions.Text += "\nStep 3: Wireless mode enabled! You can now DISCONNECT the USB cable from your device.\n\nClick the button below to connect.";
 
             btnStartWirelessSetup.Text = $"Connect to {foundIp}";
-            btnStartWirelessSetup.Click -= async (s, e) => await StartGuidedSetup(); // Remove old handler
-            btnStartWirelessSetup.Click += async (s, e) => await ConnectToIp(foundIp); // Add new handler
+            _setupState = WirelessSetupState.ReadyToConnect;
         }
 
         private Task<(string output, string error)> RunCommandAsync(string fileName, string arguments)
