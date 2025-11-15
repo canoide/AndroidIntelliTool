@@ -82,18 +82,22 @@ namespace AndroidIntelliTool
 
             var (output, error) = await RunCommandAsync(_adbPath, $"connect {ip}");
 
+            // Debug: Show raw output
+            string debugInfo = $"Output: '{output}'\nError: '{error}'";
+
             // Check if connection was successful
             // adb connect returns output in stdout, not stderr
             bool isConnected = output.Contains("connected to") || output.Contains("already connected");
             bool isFailed = output.ToLower().Contains("failed") ||
                            output.ToLower().Contains("cannot connect") ||
                            output.ToLower().Contains("connection refused") ||
-                           output.ToLower().Contains("no route to host");
+                           output.ToLower().Contains("no route to host") ||
+                           output.ToLower().Contains("unable to connect");
 
             if (isFailed || (!isConnected && !string.IsNullOrEmpty(error)))
             {
                 string errorMsg = !string.IsNullOrEmpty(output) ? output : error;
-                MessageBox.Show($"Failed to connect to {ip}:\n{errorMsg}", "Connection Failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Failed to connect to {ip}:\n{errorMsg}\n\n[Debug]\n{debugInfo}", "Connection Failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             else if (isConnected)
             {
@@ -110,8 +114,8 @@ namespace AndroidIntelliTool
             }
             else
             {
-                // Unknown response
-                MessageBox.Show($"Unexpected response when connecting to {ip}:\n{output}\n{error}", "Connection Status Unknown", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                // Unknown response - show debug info
+                MessageBox.Show($"Unexpected response when connecting to {ip}:\n\n[Debug Info]\n{debugInfo}", "Connection Status Unknown", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
 
