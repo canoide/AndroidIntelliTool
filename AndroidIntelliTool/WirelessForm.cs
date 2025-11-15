@@ -86,9 +86,6 @@ namespace AndroidIntelliTool
             string outputLower = output?.Trim().ToLower() ?? "";
             string errorLower = error?.Trim().ToLower() ?? "";
 
-            // Debug: Show raw output
-            string debugInfo = $"Raw Output: '{output}'\nRaw Error: '{error}'\n\nTrimmed Output: '{outputLower}'\nTrimmed Error: '{errorLower}'";
-
             // Check if connection was successful - be VERY strict
             // Only consider it success if we explicitly see these messages
             bool isConnected = outputLower.Contains("connected to") || outputLower.Contains("already connected");
@@ -105,8 +102,7 @@ namespace AndroidIntelliTool
             // If EXPLICITLY connected, show success
             if (isConnected)
             {
-                // TEMPORARY: Always show debug to diagnose the issue
-                MessageBox.Show($"Successfully connected to {ip}.\n\n[Debug - PLEASE REPORT THIS]\n{debugInfo}", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show($"Successfully connected to {ip}.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 if (!_savedIps.Contains(ip))
                 {
                     _savedIps.Add(ip);
@@ -121,12 +117,12 @@ namespace AndroidIntelliTool
             else if (isFailed)
             {
                 string errorMsg = !string.IsNullOrEmpty(output) ? output : error;
-                MessageBox.Show($"Failed to connect to {ip}:\n{errorMsg}\n\n[Debug]\n{debugInfo}", "Connection Failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Failed to connect to {ip}:\n\n{errorMsg}", "Connection Failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-            // Otherwise, we don't know what happened - show debug
+            // Otherwise, we don't know what happened - probably failed
             else
             {
-                MessageBox.Show($"Unable to determine connection status for {ip}\n\nThis usually means the connection failed.\n\n[Debug Info]\n{debugInfo}", "Connection Status Unknown", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show($"Unable to determine connection status for {ip}.\n\nThis usually means the connection failed.\n\nPlease check that:\n- The device is on the same network\n- Wireless debugging is enabled on the device\n- The IP address is correct", "Connection Status Unknown", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
 
