@@ -105,7 +105,8 @@ namespace AndroidIntelliTool
             // If EXPLICITLY connected, show success
             if (isConnected)
             {
-                MessageBox.Show($"Successfully connected to {ip}.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                // TEMPORARY: Always show debug to diagnose the issue
+                MessageBox.Show($"Successfully connected to {ip}.\n\n[Debug - PLEASE REPORT THIS]\n{debugInfo}", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 if (!_savedIps.Contains(ip))
                 {
                     _savedIps.Add(ip);
