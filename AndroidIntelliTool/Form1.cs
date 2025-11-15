@@ -213,9 +213,10 @@ namespace AndroidIntelliTool
         private async Task InstallAab(string device, string aabPath)
         {
             // Check if bundletool is configured
-            if (!_config.ContainsKey("bundletool") || !File.Exists(_config["bundletool"]))
+            if (!IsBundletoolConfigured(out string errorMessage))
             {
-                MessageBox.Show("Bundletool is not configured. Please set the path in Tools -> Settings.", "Bundletool Required", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show(errorMessage, "Bundletool Required", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                outputTextBox.AppendText($"\n{errorMessage}");
                 return;
             }
 
@@ -280,9 +281,10 @@ namespace AndroidIntelliTool
             }
 
             // Check if bundletool is configured
-            if (!_config.ContainsKey("bundletool") || !File.Exists(_config["bundletool"]))
+            if (!IsBundletoolConfigured(out string errorMessage))
             {
-                MessageBox.Show("Bundletool is not configured. Please set the path in Tools -> Settings.", "Bundletool Required", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show(errorMessage, "Bundletool Required", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                outputTextBox.AppendText($"\n{errorMessage}");
                 return;
             }
 
@@ -356,9 +358,10 @@ namespace AndroidIntelliTool
             }
 
             // Check if bundletool is configured
-            if (!_config.ContainsKey("bundletool") || !File.Exists(_config["bundletool"]))
+            if (!IsBundletoolConfigured(out string errorMessage))
             {
-                MessageBox.Show("Bundletool is not configured. Please set the path in Tools -> Settings.", "Bundletool Required", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show(errorMessage, "Bundletool Required", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                outputTextBox.AppendText($"\n{errorMessage}");
                 return;
             }
 
@@ -660,6 +663,32 @@ namespace AndroidIntelliTool
 
         #region Core Logic
 
+        private bool IsBundletoolConfigured(out string message)
+        {
+            if (!_config.ContainsKey("bundletool"))
+            {
+                message = "Bundletool path is not set in configuration.\nPlease configure it in Tools -> Settings.";
+                return false;
+            }
+
+            string bundletoolPath = _config["bundletool"]?.Trim();
+
+            if (string.IsNullOrWhiteSpace(bundletoolPath))
+            {
+                message = "Bundletool path is empty.\nPlease configure it in Tools -> Settings.";
+                return false;
+            }
+
+            if (!File.Exists(bundletoolPath))
+            {
+                message = $"Bundletool file not found at:\n{bundletoolPath}\n\nPlease check the path in Tools -> Settings.";
+                return false;
+            }
+
+            message = null;
+            return true;
+        }
+
         private async Task ProcessApkFile(string filePath)
         {
             apkPathTextBox.Text = filePath;
@@ -679,9 +708,9 @@ namespace AndroidIntelliTool
             if (apkPath.EndsWith(".aab", StringComparison.OrdinalIgnoreCase))
             {
                 // For AAB files, use bundletool to get info
-                if (!_config.ContainsKey("bundletool") || !File.Exists(_config["bundletool"]))
+                if (!IsBundletoolConfigured(out string errorMessage))
                 {
-                    outputTextBox.AppendText("\nBundletool is not configured. Cannot read AAB info.");
+                    outputTextBox.AppendText($"\n{errorMessage}");
                     return ("AAB file (bundletool required)", "---");
                 }
 

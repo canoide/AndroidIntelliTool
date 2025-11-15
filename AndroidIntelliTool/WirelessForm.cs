@@ -81,11 +81,21 @@ namespace AndroidIntelliTool
             if (string.IsNullOrWhiteSpace(ip)) return;
 
             var (output, error) = await RunCommandAsync(_adbPath, $"connect {ip}");
-            if (!string.IsNullOrEmpty(error) && !output.Contains("already connected"))
+
+            // Check if connection was successful
+            // adb connect returns output in stdout, not stderr
+            bool isConnected = output.Contains("connected to") || output.Contains("already connected");
+            bool isFailed = output.ToLower().Contains("failed") ||
+                           output.ToLower().Contains("cannot connect") ||
+                           output.ToLower().Contains("connection refused") ||
+                           output.ToLower().Contains("no route to host");
+
+            if (isFailed || (!isConnected && !string.IsNullOrEmpty(error)))
             {
-                MessageBox.Show($"Failed to connect to {ip}:\n{error}", "Connection Failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                string errorMsg = !string.IsNullOrEmpty(output) ? output : error;
+                MessageBox.Show($"Failed to connect to {ip}:\n{errorMsg}", "Connection Failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-            else
+            else if (isConnected)
             {
                 MessageBox.Show($"Successfully connected to {ip}.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 if (!_savedIps.Contains(ip))
@@ -97,6 +107,11 @@ namespace AndroidIntelliTool
                 }
                 this.DialogResult = DialogResult.OK;
                 this.Close();
+            }
+            else
+            {
+                // Unknown response
+                MessageBox.Show($"Unexpected response when connecting to {ip}:\n{output}\n{error}", "Connection Status Unknown", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
 
