@@ -82,24 +82,28 @@ namespace AndroidIntelliTool
 
             var (output, error) = await RunCommandAsync(_adbPath, $"connect {ip}");
 
+            // Normalize output (trim whitespace and convert to lowercase for checking)
+            string outputLower = output?.Trim().ToLower() ?? "";
+            string errorLower = error?.Trim().ToLower() ?? "";
+
             // Debug: Show raw output
-            string debugInfo = $"Output: '{output}'\nError: '{error}'";
+            string debugInfo = $"Raw Output: '{output}'\nRaw Error: '{error}'\n\nTrimmed Output: '{outputLower}'\nTrimmed Error: '{errorLower}'";
 
-            // Check if connection was successful
-            // adb connect returns output in stdout, not stderr
-            bool isConnected = output.Contains("connected to") || output.Contains("already connected");
-            bool isFailed = output.ToLower().Contains("failed") ||
-                           output.ToLower().Contains("cannot connect") ||
-                           output.ToLower().Contains("connection refused") ||
-                           output.ToLower().Contains("no route to host") ||
-                           output.ToLower().Contains("unable to connect");
+            // Check if connection was successful - be VERY strict
+            // Only consider it success if we explicitly see these messages
+            bool isConnected = outputLower.Contains("connected to") || outputLower.Contains("already connected");
 
-            if (isFailed || (!isConnected && !string.IsNullOrEmpty(error)))
-            {
-                string errorMsg = !string.IsNullOrEmpty(output) ? output : error;
-                MessageBox.Show($"Failed to connect to {ip}:\n{errorMsg}\n\n[Debug]\n{debugInfo}", "Connection Failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-            else if (isConnected)
+            // Check for various failure patterns
+            bool isFailed = outputLower.Contains("failed") ||
+                           outputLower.Contains("cannot connect") ||
+                           outputLower.Contains("connection refused") ||
+                           outputLower.Contains("no route to host") ||
+                           outputLower.Contains("unable to connect") ||
+                           errorLower.Contains("failed") ||
+                           errorLower.Contains("error");
+
+            // If EXPLICITLY connected, show success
+            if (isConnected)
             {
                 MessageBox.Show($"Successfully connected to {ip}.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 if (!_savedIps.Contains(ip))
@@ -112,10 +116,16 @@ namespace AndroidIntelliTool
                 this.DialogResult = DialogResult.OK;
                 this.Close();
             }
+            // If explicitly failed, show error
+            else if (isFailed)
+            {
+                string errorMsg = !string.IsNullOrEmpty(output) ? output : error;
+                MessageBox.Show($"Failed to connect to {ip}:\n{errorMsg}\n\n[Debug]\n{debugInfo}", "Connection Failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            // Otherwise, we don't know what happened - show debug
             else
             {
-                // Unknown response - show debug info
-                MessageBox.Show($"Unexpected response when connecting to {ip}:\n\n[Debug Info]\n{debugInfo}", "Connection Status Unknown", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show($"Unable to determine connection status for {ip}\n\nThis usually means the connection failed.\n\n[Debug Info]\n{debugInfo}", "Connection Status Unknown", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
 
