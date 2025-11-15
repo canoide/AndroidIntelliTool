@@ -50,6 +50,8 @@ namespace AndroidIntelliTool
             this.screenRecordButton = new System.Windows.Forms.Button();
             this.forceStopAppButton = new System.Windows.Forms.Button();
             this.fileExplorerButton = new System.Windows.Forms.Button();
+            this.extractSignedApksButton = new System.Windows.Forms.Button();
+            this.extractUniversalApkButton = new System.Windows.Forms.Button();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -105,35 +107,53 @@ namespace AndroidIntelliTool
             this.installButton.TabIndex = 5;
             this.installButton.Text = "Install and Run";
             this.installButton.UseVisualStyleBackColor = true;
-            // 
+            //
+            // extractSignedApksButton
+            //
+            this.extractSignedApksButton.Location = new System.Drawing.Point(8, 224);
+            this.extractSignedApksButton.Name = "extractSignedApksButton";
+            this.extractSignedApksButton.Size = new System.Drawing.Size(267, 23);
+            this.extractSignedApksButton.TabIndex = 25;
+            this.extractSignedApksButton.Text = "Extract Signed APKs from AAB";
+            this.extractSignedApksButton.UseVisualStyleBackColor = true;
+            //
+            // extractUniversalApkButton
+            //
+            this.extractUniversalApkButton.Location = new System.Drawing.Point(275, 224);
+            this.extractUniversalApkButton.Name = "extractUniversalApkButton";
+            this.extractUniversalApkButton.Size = new System.Drawing.Size(267, 23);
+            this.extractUniversalApkButton.TabIndex = 26;
+            this.extractUniversalApkButton.Text = "Extract Universal APK from AAB";
+            this.extractUniversalApkButton.UseVisualStyleBackColor = true;
+            //
             // packageNameTextBox
-            // 
-            this.packageNameTextBox.Location = new System.Drawing.Point(8, 246);
+            //
+            this.packageNameTextBox.Location = new System.Drawing.Point(8, 270);
             this.packageNameTextBox.Name = "packageNameTextBox";
             this.packageNameTextBox.Size = new System.Drawing.Size(237, 20);
             this.packageNameTextBox.TabIndex = 6;
-            // 
+            //
             // restartAppButton
-            // 
-            this.restartAppButton.Location = new System.Drawing.Point(8, 272);
+            //
+            this.restartAppButton.Location = new System.Drawing.Point(8, 296);
             this.restartAppButton.Name = "restartAppButton";
             this.restartAppButton.Size = new System.Drawing.Size(136, 23);
             this.restartAppButton.TabIndex = 7;
             this.restartAppButton.Text = "Restart App";
             this.restartAppButton.UseVisualStyleBackColor = true;
-            // 
+            //
             // uninstallAppButton
-            // 
-            this.uninstallAppButton.Location = new System.Drawing.Point(146, 272);
+            //
+            this.uninstallAppButton.Location = new System.Drawing.Point(146, 296);
             this.uninstallAppButton.Name = "uninstallAppButton";
             this.uninstallAppButton.Size = new System.Drawing.Size(136, 23);
             this.uninstallAppButton.TabIndex = 8;
             this.uninstallAppButton.Text = "Uninstall";
             this.uninstallAppButton.UseVisualStyleBackColor = true;
-            // 
+            //
             // clearDataButton
-            // 
-            this.clearDataButton.Location = new System.Drawing.Point(284, 272);
+            //
+            this.clearDataButton.Location = new System.Drawing.Point(284, 296);
             this.clearDataButton.Name = "clearDataButton";
             this.clearDataButton.Size = new System.Drawing.Size(136, 23);
             this.clearDataButton.TabIndex = 9;
@@ -157,10 +177,10 @@ namespace AndroidIntelliTool
             this.logcatButton.TabIndex = 11;
             this.logcatButton.Text = "Show Logs";
             this.logcatButton.UseVisualStyleBackColor = true;
-            // 
+            //
             // outputTextBox
-            // 
-            this.outputTextBox.Location = new System.Drawing.Point(8, 301);
+            //
+            this.outputTextBox.Location = new System.Drawing.Point(8, 325);
             this.outputTextBox.Name = "outputTextBox";
             this.outputTextBox.ReadOnly = true;
             this.outputTextBox.Size = new System.Drawing.Size(534, 123);
@@ -184,20 +204,20 @@ namespace AndroidIntelliTool
             this.label2.Size = new System.Drawing.Size(127, 13);
             this.label2.TabIndex = 14;
             this.label2.Text = "APK/AAB File (or drag it)";
-            // 
+            //
             // label3
-            // 
+            //
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(8, 230);
+            this.label3.Location = new System.Drawing.Point(8, 254);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(84, 13);
             this.label3.TabIndex = 15;
             this.label3.Text = "Package Name";
-            // 
+            //
             // apkVersionLabel
-            // 
+            //
             this.apkVersionLabel.AutoSize = true;
-            this.apkVersionLabel.Location = new System.Drawing.Point(254, 249);
+            this.apkVersionLabel.Location = new System.Drawing.Point(254, 273);
             this.apkVersionLabel.Name = "apkVersionLabel";
             this.apkVersionLabel.Size = new System.Drawing.Size(63, 13);
             this.apkVersionLabel.TabIndex = 16;
@@ -300,10 +320,10 @@ namespace AndroidIntelliTool
             this.screenRecordButton.TabIndex = 22;
             this.screenRecordButton.Text = "Record Screen";
             this.screenRecordButton.UseVisualStyleBackColor = true;
-            // 
+            //
             // forceStopAppButton
-            // 
-            this.forceStopAppButton.Location = new System.Drawing.Point(422, 272);
+            //
+            this.forceStopAppButton.Location = new System.Drawing.Point(422, 296);
             this.forceStopAppButton.Name = "forceStopAppButton";
             this.forceStopAppButton.Size = new System.Drawing.Size(136, 23);
             this.forceStopAppButton.TabIndex = 23;
@@ -318,12 +338,14 @@ namespace AndroidIntelliTool
             this.fileExplorerButton.TabIndex = 24;
             this.fileExplorerButton.Text = "File Explorer";
             this.fileExplorerButton.UseVisualStyleBackColor = true;
-            // 
+            //
             // Form1
-            // 
+            //
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(561, 450);
+            this.ClientSize = new System.Drawing.Size(561, 480);
+            this.Controls.Add(this.extractUniversalApkButton);
+            this.Controls.Add(this.extractSignedApksButton);
             this.Controls.Add(this.fileExplorerButton);
             this.Controls.Add(this.forceStopAppButton);
             this.Controls.Add(this.screenRecordButton);
@@ -391,6 +413,8 @@ namespace AndroidIntelliTool
         private System.Windows.Forms.Button forceStopAppButton;
         private System.Windows.Forms.Button fileExplorerButton;
         private System.Windows.Forms.ToolStripMenuItem crashLogAnalyzerToolStripMenuItem;
+        private System.Windows.Forms.Button extractSignedApksButton;
+        private System.Windows.Forms.Button extractUniversalApkButton;
 
     }
 }
