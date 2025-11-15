@@ -30,7 +30,7 @@ namespace AndroidIntelliTool
                 return item;
             }
 
-            private static Color GetColorForPriority(char priority)
+            public static Color GetColorForPriority(char priority)
             {
                 switch (priority)
                 {
@@ -60,6 +60,12 @@ namespace AndroidIntelliTool
         private readonly Timer _updateTimer = new Timer();
         private static readonly Regex LogcatRegex = new Regex(@"^(\S+\s+\S+)\s+\d+\s+\d+\s+([VDIWEFS])\s+([^:]+):\s(.*)$", RegexOptions.Compiled);
 
+        // New features
+        private bool _isPaused = false;
+        private const int MAX_LOG_ENTRIES = 50000; // Limit to prevent memory issues
+        private string _searchText = "";
+        private int[] _logCountByPriority = new int[7]; // V,D,I,W,E,F,S
+
         public LogcatForm(Form1 mainForm, string device, string adbPath, Dictionary<string, string> config)
         {
             InitializeComponent();
@@ -79,6 +85,8 @@ namespace AndroidIntelliTool
             exportSelectedButton.Click += (s, ev) => ExportLogs(true);
             exportAllButton.Click += (s, ev) => ExportLogs(false);
             copyButton.Click += (s, ev) => CopySelectedLogs();
+            pauseButton.Click += (s, ev) => TogglePause();
+            searchButton.Click += (s, ev) => ShowSearchDialog();
             logListView.KeyDown += LogListView_KeyDown;
 
             // Load saved filters
@@ -154,6 +162,9 @@ namespace AndroidIntelliTool
         {
             if (_rawLogQueue.IsEmpty) return;
 
+            // If paused, don't process new entries but keep them in queue
+            if (_isPaused) return;
+
             var itemsToAdd = new List<ListViewItem>();
             const int maxItemsPerTick = 500;
             int processedCount = 0;
@@ -183,11 +194,43 @@ namespace AndroidIntelliTool
                         Message = line
                     };
                 }
+
+                // Update statistics
+                int priorityIndex = "VDIWEFS".IndexOf(logEntry.PriorityChar);
+                if (priorityIndex >= 0 && priorityIndex < _logCountByPriority.Length)
+                {
+                    _logCountByPriority[priorityIndex]++;
+                }
+
                 _allLogEntries.Add(logEntry);
+
+                // Apply max entries limit to prevent memory issues
+                if (_allLogEntries.Count > MAX_LOG_ENTRIES)
+                {
+                    int itemsToRemove = _allLogEntries.Count - MAX_LOG_ENTRIES;
+                    _allLogEntries.RemoveRange(0, itemsToRemove);
+                    // Also remove from ListView if needed
+                    if (logListView.Items.Count > MAX_LOG_ENTRIES)
+                    {
+                        for (int i = 0; i < itemsToRemove && i < logListView.Items.Count; i++)
+                        {
+                            logListView.Items.RemoveAt(0);
+                        }
+                    }
+                }
 
                 if (PassesClientFilters(logEntry))
                 {
-                    itemsToAdd.Add(logEntry.ToListViewItem());
+                    var item = logEntry.ToListViewItem();
+
+                    // Highlight search text if present
+                    if (!string.IsNullOrEmpty(_searchText) &&
+                        logEntry.Message.Contains(_searchText, StringComparison.OrdinalIgnoreCase))
+                    {
+                        item.BackColor = Color.Yellow;
+                    }
+
+                    itemsToAdd.Add(item);
                 }
             }
 
@@ -203,6 +246,9 @@ namespace AndroidIntelliTool
 
                 logListView.EndUpdate();
             }
+
+            // Update statistics display
+            UpdateStatistics();
         }
 
         #region Filtering
@@ -312,8 +358,137 @@ namespace AndroidIntelliTool
         {
             if (e.Control && e.KeyCode == Keys.C)
             {
-                CopySelectedLogs();
+                if (e.Shift)
+                {
+                    // Ctrl+Shift+C: Copy full line with format
+                    CopySelectedLogsFullFormat();
+                }
+                else
+                {
+                    // Ctrl+C: Copy just messages
+                    CopySelectedLogs();
+                }
+                e.Handled = true;
             }
+            else if (e.Control && e.KeyCode == Keys.F)
+            {
+                // Ctrl+F: Show search dialog
+                ShowSearchDialog();
+                e.Handled = true;
+            }
+        }
+
+        private void CopySelectedLogsFullFormat()
+        {
+            if (logListView.SelectedItems.Count == 0) return;
+            var textToCopy = logListView.SelectedItems.Cast<ListViewItem>()
+                .Select(item =>
+                {
+                    var entry = (LogEntry)item.Tag;
+                    return $"{entry.Time} {entry.PriorityChar}/{entry.Tag}: {entry.Message}";
+                });
+            Clipboard.SetText(string.Join("\n", textToCopy));
+        }
+
+        #endregion
+
+        #region New Features
+
+        private void TogglePause()
+        {
+            _isPaused = !_isPaused;
+            pauseButton.Text = _isPaused ? "Resume" : "Pause";
+            pauseButton.BackColor = _isPaused ? Color.LightCoral : SystemColors.Control;
+
+            if (!_isPaused)
+            {
+                // When resuming, process any queued logs
+                UpdateUI(null, null);
+            }
+        }
+
+        private void ShowSearchDialog()
+        {
+            using (Form searchForm = new Form()
+            {
+                Width = 400,
+                Height = 150,
+                FormBorderStyle = FormBorderStyle.FixedDialog,
+                Text = "Search Logs",
+                StartPosition = FormStartPosition.CenterParent,
+                MaximizeBox = false,
+                MinimizeBox = false
+            })
+            {
+                Label promptLabel = new Label() { Left = 20, Top = 20, Text = "Search for:", Width = 350 };
+                TextBox searchTextBox = new TextBox() { Left = 20, Top = 50, Width = 350, Text = _searchText };
+                Button searchButton = new Button() { Text = "Search", Left = 150, Width = 100, Top = 80, DialogResult = DialogResult.OK };
+                Button clearButton = new Button() { Text = "Clear", Left = 260, Width = 100, Top = 80 };
+
+                clearButton.Click += (s, e) =>
+                {
+                    _searchText = "";
+                    ApplySearchHighlight();
+                    searchForm.Close();
+                };
+
+                searchButton.Click += (s, e) =>
+                {
+                    _searchText = searchTextBox.Text;
+                    ApplySearchHighlight();
+                    searchForm.Close();
+                };
+
+                searchForm.Controls.Add(promptLabel);
+                searchForm.Controls.Add(searchTextBox);
+                searchForm.Controls.Add(searchButton);
+                searchForm.Controls.Add(clearButton);
+                searchForm.AcceptButton = searchButton;
+
+                searchForm.ShowDialog();
+            }
+        }
+
+        private void ApplySearchHighlight()
+        {
+            logListView.BeginUpdate();
+            foreach (ListViewItem item in logListView.Items)
+            {
+                var entry = (LogEntry)item.Tag;
+
+                // Reset colors first
+                item.BackColor = Color.White;
+                item.ForeColor = LogEntry.GetColorForPriority(entry.PriorityChar);
+
+                // Apply highlight if search text matches
+                if (!string.IsNullOrEmpty(_searchText) &&
+                    (entry.Message.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ||
+                     entry.Tag.Contains(_searchText, StringComparison.OrdinalIgnoreCase)))
+                {
+                    item.BackColor = Color.Yellow;
+                    item.ForeColor = Color.Black;
+                }
+            }
+            logListView.EndUpdate();
+        }
+
+        private void UpdateStatistics()
+        {
+            // Update status bar with statistics
+            int errors = _logCountByPriority[4]; // E
+            int warnings = _logCountByPriority[3]; // W
+            int infos = _logCountByPriority[2]; // I
+            int total = _logCountByPriority.Sum();
+
+            string stats = $"Total: {total}";
+            if (errors > 0) stats += $" | Errors: {errors}";
+            if (warnings > 0) stats += $" | Warnings: {warnings}";
+            if (infos > 0) stats += $" | Info: {infos}";
+            stats += $" | Visible: {logListView.Items.Count}/{_allLogEntries.Count}";
+
+            if (_isPaused) stats += " | PAUSED";
+
+            statsLabel.Text = stats;
         }
 
         #endregion
