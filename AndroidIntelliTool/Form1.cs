@@ -62,7 +62,6 @@ namespace AndroidIntelliTool
             refreshDevicesButton.Click += async (s, ev) => await RefreshDevices();
             wirelessConnectButton.Click += async (s, ev) => await WirelessConnect();
             disconnectAllButton.Click += async (s, ev) => await DisconnectAll();
-            selectApkButton.Click += async (s, ev) => await SelectApkFile();
             installButton.Click += async (s, ev) => await InstallApk();
             restartAppButton.Click += async (s, ev) => await RunAppCommand("Restarting", "shell am force-stop {{pkg}}", "shell monkey -p {{pkg}} -c android.intent.category.LAUNCHER 1");
             uninstallAppButton.Click += async (s, ev) => await RunAppCommand("Uninstalling", "uninstall {{pkg}}");
@@ -80,8 +79,6 @@ namespace AndroidIntelliTool
             // File list handlers
             addToListButton.Click += (s, ev) => AddFileToList();
             removeFromListButton.Click += (s, ev) => RemoveSelectedFileFromList();
-            installSelectedButton.Click += async (s, ev) => await InstallSelectedFile();
-            extractApksFromSelectedButton.Click += async (s, ev) => await ExtractApksFromSelected();
             fileListBox.DragEnter += FileListBox_DragEnter;
             fileListBox.DragDrop += FileListBox_DragDrop;
             fileListBox.AllowDrop = true;
@@ -190,9 +187,12 @@ namespace AndroidIntelliTool
                 apkPath = _config["LastApkPath"];
             }
 
-            if (apkPath != null)
+            if (apkPath != null && (apkPath.EndsWith(".apk", StringComparison.OrdinalIgnoreCase) || apkPath.EndsWith(".aab", StringComparison.OrdinalIgnoreCase)))
             {
-                await ProcessApkFile(apkPath);
+                // Add to list and process
+                var item = new ApkFileItem { FilePath = apkPath };
+                fileListBox.Items.Add(item);
+                await ProcessApkFileInfo(apkPath);
             }
         }
 
@@ -200,34 +200,39 @@ namespace AndroidIntelliTool
 
         #region Main Tab UI Handlers
 
-        private async Task SelectApkFile()
-        {
-            using (var openFileDialog = new OpenFileDialog())
-            {
-                openFileDialog.Filter = "Android Packages (*.apk;*.aab)|*.apk;*.aab|All files (*.*)|*.*";
-                if (openFileDialog.ShowDialog() == DialogResult.OK)
-                {
-                    await ProcessApkFile(openFileDialog.FileName);
-                }
-            }
-        }
-
         private async Task InstallApk()
         {
-            string device = deviceComboBox.SelectedItem as string;
-            if (string.IsNullOrEmpty(device)) { MessageBox.Show("Please select a device."); return; }
+            // Get selected file from list
+            if (fileListBox.SelectedItem == null)
+            {
+                MessageBox.Show("Please select a file from the list first.", "No File Selected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
 
-            string filePath = apkPathTextBox.Text;
-            if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath)) { MessageBox.Show("Please select a valid file."); return; }
+            string device = deviceComboBox.SelectedItem as string;
+            if (string.IsNullOrEmpty(device))
+            {
+                MessageBox.Show("Please select a device first.", "No Device", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            var selectedItem = (ApkFileItem)fileListBox.SelectedItem;
+            string filePath = selectedItem.FilePath;
+
+            if (!File.Exists(filePath))
+            {
+                MessageBox.Show($"File not found: {filePath}", "File Not Found", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
 
             outputTextBox.Text = $"Installing {Path.GetFileName(filePath)} on {device}...\n";
 
             // Check if file is AAB
             if (filePath.EndsWith(".aab", StringComparison.OrdinalIgnoreCase))
             {
-                await InstallAab(device, filePath);
+                await InstallAabFromList(device, filePath);
             }
-            else
+            else if (filePath.EndsWith(".apk", StringComparison.OrdinalIgnoreCase))
             {
                 // Standard APK installation
                 string arguments = $"-s {device} install -r -d \"{filePath}\"";
@@ -241,6 +246,10 @@ namespace AndroidIntelliTool
                     outputTextBox.AppendText("Success!\n");
                     await RunAppCommand("Launching", "shell monkey -p {{pkg}} -c android.intent.category.LAUNCHER 1");
                 }
+            }
+            else
+            {
+                MessageBox.Show("Only APK and AAB files can be installed.", "Invalid File Type", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
 
@@ -301,16 +310,25 @@ namespace AndroidIntelliTool
 
         private async Task ExtractSignedApks()
         {
-            string filePath = apkPathTextBox.Text;
-            if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
+            // Get selected file from list
+            if (fileListBox.SelectedItem == null)
             {
-                MessageBox.Show("Please select a valid AAB file first.", "No File Selected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Please select an AAB file from the list first.", "No File Selected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            var selectedItem = (ApkFileItem)fileListBox.SelectedItem;
+            string filePath = selectedItem.FilePath;
+
+            if (!File.Exists(filePath))
+            {
+                MessageBox.Show($"File not found: {filePath}", "File Not Found", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
             if (!filePath.EndsWith(".aab", StringComparison.OrdinalIgnoreCase))
             {
-                MessageBox.Show("Please select an AAB file.", "Invalid File Type", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Please select an AAB file to extract APKs.", "Invalid File Type", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
@@ -373,16 +391,25 @@ namespace AndroidIntelliTool
 
         private async Task ExtractUniversalApk()
         {
-            string filePath = apkPathTextBox.Text;
-            if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
+            // Get selected file from list
+            if (fileListBox.SelectedItem == null)
             {
-                MessageBox.Show("Please select a valid AAB file first.", "No File Selected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Please select an AAB file from the list first.", "No File Selected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            var selectedItem = (ApkFileItem)fileListBox.SelectedItem;
+            string filePath = selectedItem.FilePath;
+
+            if (!File.Exists(filePath))
+            {
+                MessageBox.Show($"File not found: {filePath}", "File Not Found", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
             if (!filePath.EndsWith(".aab", StringComparison.OrdinalIgnoreCase))
             {
-                MessageBox.Show("Please select an AAB file.", "Invalid File Type", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Please select an AAB file to extract universal APK.", "Invalid File Type", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
@@ -671,15 +698,58 @@ namespace AndroidIntelliTool
 
         void Form1_DragEnter(object sender, DragEventArgs e)
         {
-            if (e.Data.GetDataPresent(DataFormats.FileDrop)) e.Effect = DragDropEffects.Copy;
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+                bool hasValidFile = false;
+                foreach (string file in files)
+                {
+                    string ext = Path.GetExtension(file).ToLower();
+                    if (ext == ".apk" || ext == ".aab")
+                    {
+                        hasValidFile = true;
+                        break;
+                    }
+                }
+                e.Effect = hasValidFile ? DragDropEffects.Copy : DragDropEffects.None;
+            }
         }
 
         async void Form1_DragDrop(object sender, DragEventArgs e)
         {
-            string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
-            if (files.Length > 0 && (files[0].EndsWith(".apk") || files[0].EndsWith(".aab")))
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
-                await ProcessApkFile(files[0]);
+                string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+                foreach (string filePath in files)
+                {
+                    string ext = Path.GetExtension(filePath).ToLower();
+                    if ((ext == ".apk" || ext == ".aab") && File.Exists(filePath))
+                    {
+                        var item = new ApkFileItem { FilePath = filePath };
+
+                        // Check if already in list
+                        bool alreadyExists = false;
+                        foreach (ApkFileItem existingItem in fileListBox.Items)
+                        {
+                            if (existingItem.FilePath.Equals(filePath, StringComparison.OrdinalIgnoreCase))
+                            {
+                                alreadyExists = true;
+                                break;
+                            }
+                        }
+
+                        if (!alreadyExists)
+                        {
+                            fileListBox.Items.Add(item);
+                        }
+
+                        // Auto-process first file for package info
+                        if (!alreadyExists && fileListBox.Items.Count == 1)
+                        {
+                            await ProcessApkFileInfo(filePath);
+                        }
+                    }
+                }
             }
         }
 
@@ -713,9 +783,8 @@ namespace AndroidIntelliTool
             return true;
         }
 
-        private async Task ProcessApkFile(string filePath)
+        private async Task ProcessApkFileInfo(string filePath)
         {
-            apkPathTextBox.Text = filePath;
             var (pkg, version) = await GetApkInfo(filePath);
             packageNameTextBox.Text = pkg;
             apkVersionLabel.Text = $"Version: {version}";
@@ -1020,89 +1089,6 @@ namespace AndroidIntelliTool
             if (fileListBox.SelectedItem != null)
             {
                 fileListBox.Items.Remove(fileListBox.SelectedItem);
-            }
-        }
-
-        private async Task InstallSelectedFile()
-        {
-            if (fileListBox.SelectedItem == null)
-            {
-                MessageBox.Show("Please select a file from the list first.", "No File Selected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            string device = deviceComboBox.SelectedItem as string;
-            if (string.IsNullOrEmpty(device))
-            {
-                MessageBox.Show("Please select a device first.", "No Device", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            var selectedItem = (ApkFileItem)fileListBox.SelectedItem;
-            string filePath = selectedItem.FilePath;
-
-            if (!File.Exists(filePath))
-            {
-                MessageBox.Show($"File not found: {filePath}", "File Not Found", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-
-            string extension = Path.GetExtension(filePath).ToLower();
-
-            if (extension == ".aab")
-            {
-                await InstallAabFromList(device, filePath);
-            }
-            else if (extension == ".apk")
-            {
-                apkPathTextBox.Text = filePath;
-                await InstallApk();
-            }
-            else
-            {
-                MessageBox.Show("Only APK and AAB files can be installed.", "Invalid File Type", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            }
-        }
-
-        private async Task ExtractApksFromSelected()
-        {
-            if (fileListBox.SelectedItem == null)
-            {
-                MessageBox.Show("Please select an AAB file from the list first.", "No File Selected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            var selectedItem = (ApkFileItem)fileListBox.SelectedItem;
-            string aabPath = selectedItem.FilePath;
-
-            if (!File.Exists(aabPath))
-            {
-                MessageBox.Show($"File not found: {aabPath}", "File Not Found", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-
-            if (!aabPath.EndsWith(".aab", StringComparison.OrdinalIgnoreCase))
-            {
-                MessageBox.Show("Please select an AAB file to extract APKs.", "Invalid File Type", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            // Show options dialog
-            var result = MessageBox.Show("Extract Universal APK?\n\nYes = Universal APK (single file)\nNo = Signed APKs (multiple split APKs)",
-                "Extract Options", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
-
-            if (result == DialogResult.Cancel)
-                return;
-
-            apkPathTextBox.Text = aabPath;
-
-            if (result == DialogResult.Yes)
-            {
-                await ExtractUniversalApk();
-            }
-            else
-            {
-                await ExtractSignedApks();
             }
         }
 
