@@ -1031,7 +1031,7 @@ namespace AndroidIntelliTool
                 return;
             }
 
-            string device = GetSelectedDevice();
+            string device = deviceComboBox.SelectedItem as string;
             if (string.IsNullOrEmpty(device))
             {
                 MessageBox.Show("Please select a device first.", "No Device", MessageBoxButtons.OK, MessageBoxIcon.Warning);
