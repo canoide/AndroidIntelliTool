@@ -10,6 +10,7 @@ namespace AndroidIntelliTool
         public string KeystorePassword { get; private set; }
         public string KeyAlias { get; private set; }
         public string KeyPassword { get; private set; }
+        public bool SaveCredentials { get; private set; }
 
         private TextBox textKeystorePath;
         private TextBox textKeystorePassword;
@@ -19,6 +20,7 @@ namespace AndroidIntelliTool
         private Button btnOk;
         private Button btnCancel;
         private CheckBox checkUseDebugKey;
+        private CheckBox checkSaveCredentials;
         private KeystoreInfo _defaultInfo;
 
         public KeystoreForm() : this(null)
@@ -32,7 +34,7 @@ namespace AndroidIntelliTool
             InitializeComponent();
             this.Text = "Keystore Information";
             this.Width = 500;
-            this.Height = 300;
+            this.Height = 340;
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.StartPosition = FormStartPosition.CenterParent;
             this.MaximizeBox = false;
@@ -86,7 +88,18 @@ namespace AndroidIntelliTool
 
             textKeyPassword = new TextBox { Location = new System.Drawing.Point(140, yPos), Width = 250, UseSystemPasswordChar = true, Enabled = false };
             this.Controls.Add(textKeyPassword);
-            yPos += 50;
+            yPos += 40;
+
+            // Save credentials checkbox
+            checkSaveCredentials = new CheckBox
+            {
+                Text = "Save keystore credentials (Alias and Password)",
+                Location = new System.Drawing.Point(20, yPos),
+                Width = 400,
+                Checked = defaultInfo?.SaveCredentials ?? false
+            };
+            this.Controls.Add(checkSaveCredentials);
+            yPos += 35;
 
             // Buttons
             btnOk = new Button { Text = "OK", Location = new System.Drawing.Point(310, yPos), Width = 80, DialogResult = DialogResult.OK };
@@ -218,6 +231,9 @@ namespace AndroidIntelliTool
                 KeyAlias = textKeyAlias.Text;
                 KeyPassword = textKeyPassword.Text;
             }
+
+            // Capture save credentials preference
+            SaveCredentials = checkSaveCredentials.Checked;
         }
     }
 }

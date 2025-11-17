@@ -18,6 +18,7 @@ namespace AndroidIntelliTool
         public string Alias { get; set; }
         public string Password { get; set; }
         public bool UseDebugKeystore { get; set; }
+        public bool SaveCredentials { get; set; }
     }
 
     // Class to represent an APK/AAB file in the list
@@ -119,12 +120,123 @@ namespace AndroidIntelliTool
                         .Where(line => !string.IsNullOrWhiteSpace(line) && line.Contains('='))
                         .Select(line => line.Split(new[] { '=' }, 2))
                         .ToDictionary(parts => parts[0].Trim(), parts => parts[1].Trim(), StringComparer.OrdinalIgnoreCase);
+
+            // Load file list
+            LoadFileList();
+
+            // Load keystore cache
+            LoadKeystoreCache();
+        }
+
+        private void LoadFileList()
+        {
+            if (_config.ContainsKey("FileList") && !string.IsNullOrEmpty(_config["FileList"]))
+            {
+                string[] filePaths = _config["FileList"].Split(new[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
+                foreach (string filePath in filePaths)
+                {
+                    if (File.Exists(filePath))
+                    {
+                        var item = new ApkFileItem { FilePath = filePath };
+                        fileListBox.Items.Add(item);
+                    }
+                }
+            }
+        }
+
+        private void LoadKeystoreCache()
+        {
+            _keystoreCache.Clear();
+
+            foreach (var kvp in _config.Where(x => x.Key.StartsWith("KeystoreCache_")))
+            {
+                string aabPath = kvp.Key.Substring("KeystoreCache_".Length);
+                string[] parts = kvp.Value.Split(new[] { '|' }, StringSplitOptions.None);
+
+                if (parts.Length >= 4)
+                {
+                    var keystoreInfo = new KeystoreInfo
+                    {
+                        KeystorePath = parts[0],
+                        UseDebugKeystore = parts[0].Contains("debug.keystore"),
+                        SaveCredentials = parts.Length > 4 && parts[4] == "1"
+                    };
+
+                    // Only load credentials if they were saved
+                    if (keystoreInfo.SaveCredentials && parts.Length >= 3)
+                    {
+                        keystoreInfo.Alias = parts[1];
+                        keystoreInfo.Password = parts[2];
+                    }
+
+                    _keystoreCache[aabPath] = keystoreInfo;
+                }
+            }
         }
 
         private void SaveConfig()
         {
+            // Save file list
+            SaveFileList();
+
+            // Save keystore cache
+            SaveKeystoreCache();
+
             var lines = _config.Select(kvp => $"{kvp.Key}={kvp.Value}");
             File.WriteAllLines(ConfigFileName, lines);
+        }
+
+        private void SaveFileList()
+        {
+            var filePaths = new List<string>();
+            foreach (ApkFileItem item in fileListBox.Items)
+            {
+                if (File.Exists(item.FilePath))
+                {
+                    filePaths.Add(item.FilePath);
+                }
+            }
+
+            if (filePaths.Count > 0)
+            {
+                _config["FileList"] = string.Join("|", filePaths);
+            }
+            else
+            {
+                _config.Remove("FileList");
+            }
+        }
+
+        private void SaveKeystoreCache()
+        {
+            // Remove old keystore cache entries
+            var keysToRemove = _config.Keys.Where(k => k.StartsWith("KeystoreCache_")).ToList();
+            foreach (var key in keysToRemove)
+            {
+                _config.Remove(key);
+            }
+
+            // Save new keystore cache entries
+            foreach (var kvp in _keystoreCache)
+            {
+                string aabPath = kvp.Key;
+                var keystoreInfo = kvp.Value;
+
+                // Build value string: keystorePath|alias|password|useDebug|saveCredentials
+                string value;
+                if (keystoreInfo.SaveCredentials)
+                {
+                    // Save full info including credentials
+                    value = $"{keystoreInfo.KeystorePath}|{keystoreInfo.Alias ?? ""}|{keystoreInfo.Password ?? ""}|{(keystoreInfo.UseDebugKeystore ? "1" : "0")}|1";
+                }
+                else
+                {
+                    // Save only keystore path
+                    value = $"{keystoreInfo.KeystorePath}|||{(keystoreInfo.UseDebugKeystore ? "1" : "0")}|0";
+                }
+
+                _config[$"KeystoreCache_{aabPath}"] = value;
+            }
         }
 
         public void SaveConfiguration()
@@ -1081,6 +1193,9 @@ namespace AndroidIntelliTool
                             }
                         }
                     }
+
+                    // Save config after adding files
+                    SaveConfig();
                 }
             }
         }
@@ -1090,6 +1205,9 @@ namespace AndroidIntelliTool
             if (fileListBox.SelectedItem != null)
             {
                 fileListBox.Items.Remove(fileListBox.SelectedItem);
+
+                // Save config after removing file
+                SaveConfig();
             }
         }
 
@@ -1178,11 +1296,13 @@ namespace AndroidIntelliTool
                             KeystorePath = keystoreForm.KeystorePath,
                             Alias = keystoreForm.KeyAlias,
                             Password = keystoreForm.KeyPassword,
-                            UseDebugKeystore = keystoreForm.KeystorePath.Contains("debug.keystore")
+                            UseDebugKeystore = keystoreForm.KeystorePath.Contains("debug.keystore"),
+                            SaveCredentials = keystoreForm.SaveCredentials
                         };
 
                         // Update cache
                         _keystoreCache[aabPath] = newInfo;
+                        SaveConfig(); // Save to persist keystore cache
                         return newInfo;
                     }
                     else
@@ -1203,11 +1323,13 @@ namespace AndroidIntelliTool
                             KeystorePath = keystoreForm.KeystorePath,
                             Alias = keystoreForm.KeyAlias,
                             Password = keystoreForm.KeyPassword,
-                            UseDebugKeystore = keystoreForm.KeystorePath.Contains("debug.keystore")
+                            UseDebugKeystore = keystoreForm.KeystorePath.Contains("debug.keystore"),
+                            SaveCredentials = keystoreForm.SaveCredentials
                         };
 
                         // Cache for future use
                         _keystoreCache[aabPath] = newInfo;
+                        SaveConfig(); // Save to persist keystore cache
                         return newInfo;
                     }
                     else
@@ -1261,7 +1383,6 @@ namespace AndroidIntelliTool
                 if (installExitCode == 0)
                 {
                     outputTextBox.AppendText($"\nSuccessfully installed {Path.GetFileName(aabPath)}");
-                    MessageBox.Show($"AAB installed successfully!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
                     // Launch the app
                     await RunAppCommand("Launching", "shell monkey -p {{pkg}} -c android.intent.category.LAUNCHER 1");
