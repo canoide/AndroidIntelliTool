@@ -20,6 +20,9 @@
       <Compile Update="FileExplorerForm.Designer.cs">
         <DependentUpon>FileExplorerForm.cs</DependentUpon>
       </Compile>
+      <Compile Update="KeystoreForm.cs">
+        <SubType>Form</SubType>
+      </Compile>
     </ItemGroup>
 
 </Project>

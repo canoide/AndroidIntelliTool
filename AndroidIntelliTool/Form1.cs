@@ -11,6 +11,29 @@ using System.Windows.Forms;
 
 namespace AndroidIntelliTool
 {
+    // Class to cache keystore information
+    public class KeystoreInfo
+    {
+        public string KeystorePath { get; set; }
+        public string Alias { get; set; }
+        public string Password { get; set; }
+        public bool UseDebugKeystore { get; set; }
+        public bool SaveCredentials { get; set; }
+    }
+
+    // Class to represent an APK/AAB file in the list
+    public class ApkFileItem
+    {
+        public string FilePath { get; set; }
+        public string FileName => Path.GetFileName(FilePath);
+        public string FileType => Path.GetExtension(FilePath).ToUpper().TrimStart('.');
+
+        public override string ToString()
+        {
+            return $"[{FileType}] {FileName}";
+        }
+    }
+
     public partial class Form1 : Form
     {
         private Dictionary<string, string> _config = new Dictionary<string, string>();
@@ -18,6 +41,9 @@ namespace AndroidIntelliTool
         private Process _screenRecordProcess;
         private bool isCrashLogAnalyzerOpen = false;
         private string _deviceRecordingPath;
+
+        // Keystore cache: maps AAB file path to its keystore info
+        private Dictionary<string, KeystoreInfo> _keystoreCache = new Dictionary<string, KeystoreInfo>();
 
 
         public Form1(string[] args)
@@ -37,7 +63,6 @@ namespace AndroidIntelliTool
             refreshDevicesButton.Click += async (s, ev) => await RefreshDevices();
             wirelessConnectButton.Click += async (s, ev) => await WirelessConnect();
             disconnectAllButton.Click += async (s, ev) => await DisconnectAll();
-            selectApkButton.Click += async (s, ev) => await SelectApkFile();
             installButton.Click += async (s, ev) => await InstallApk();
             restartAppButton.Click += async (s, ev) => await RunAppCommand("Restarting", "shell am force-stop {{pkg}}", "shell monkey -p {{pkg}} -c android.intent.category.LAUNCHER 1");
             uninstallAppButton.Click += async (s, ev) => await RunAppCommand("Uninstalling", "uninstall {{pkg}}");
@@ -48,7 +73,17 @@ namespace AndroidIntelliTool
             screenMirrorButton.Click += (s, ev) => RunScreenMirror();
             screenRecordButton.Click += async (s, ev) => await ToggleScreenRecord();
             forceStopAppButton.Click += async (s, ev) => await RunAppCommand("Force Stopping", "shell am force-stop {{pkg}}");
-            fileExplorerButton.Click += (s, ev) => OpenFileExplorer(); // New button handler
+            fileExplorerButton.Click += (s, ev) => OpenFileExplorer();
+            extractSignedApksButton.Click += async (s, ev) => await ExtractSignedApks();
+            extractUniversalApkButton.Click += async (s, ev) => await ExtractUniversalApk();
+
+            // File list handlers
+            addToListButton.Click += (s, ev) => AddFileToList();
+            removeFromListButton.Click += (s, ev) => RemoveSelectedFileFromList();
+            fileListBox.SelectedIndexChanged += async (s, ev) => await OnFileListSelectionChanged();
+            fileListBox.DragEnter += FileListBox_DragEnter;
+            fileListBox.DragDrop += FileListBox_DragDrop;
+            fileListBox.AllowDrop = true;
 
             aboutToolStripMenuItem.Click += (s, ev) => new AboutForm().ShowDialog();
 
@@ -85,12 +120,123 @@ namespace AndroidIntelliTool
                         .Where(line => !string.IsNullOrWhiteSpace(line) && line.Contains('='))
                         .Select(line => line.Split(new[] { '=' }, 2))
                         .ToDictionary(parts => parts[0].Trim(), parts => parts[1].Trim(), StringComparer.OrdinalIgnoreCase);
+
+            // Load file list
+            LoadFileList();
+
+            // Load keystore cache
+            LoadKeystoreCache();
+        }
+
+        private void LoadFileList()
+        {
+            if (_config.ContainsKey("FileList") && !string.IsNullOrEmpty(_config["FileList"]))
+            {
+                string[] filePaths = _config["FileList"].Split(new[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
+                foreach (string filePath in filePaths)
+                {
+                    if (File.Exists(filePath))
+                    {
+                        var item = new ApkFileItem { FilePath = filePath };
+                        fileListBox.Items.Add(item);
+                    }
+                }
+            }
+        }
+
+        private void LoadKeystoreCache()
+        {
+            _keystoreCache.Clear();
+
+            foreach (var kvp in _config.Where(x => x.Key.StartsWith("KeystoreCache_")))
+            {
+                string aabPath = kvp.Key.Substring("KeystoreCache_".Length);
+                string[] parts = kvp.Value.Split(new[] { '|' }, StringSplitOptions.None);
+
+                if (parts.Length >= 4)
+                {
+                    var keystoreInfo = new KeystoreInfo
+                    {
+                        KeystorePath = parts[0],
+                        UseDebugKeystore = parts[0].Contains("debug.keystore"),
+                        SaveCredentials = parts.Length > 4 && parts[4] == "1"
+                    };
+
+                    // Only load credentials if they were saved
+                    if (keystoreInfo.SaveCredentials && parts.Length >= 3)
+                    {
+                        keystoreInfo.Alias = parts[1];
+                        keystoreInfo.Password = parts[2];
+                    }
+
+                    _keystoreCache[aabPath] = keystoreInfo;
+                }
+            }
         }
 
         private void SaveConfig()
         {
+            // Save file list
+            SaveFileList();
+
+            // Save keystore cache
+            SaveKeystoreCache();
+
             var lines = _config.Select(kvp => $"{kvp.Key}={kvp.Value}");
             File.WriteAllLines(ConfigFileName, lines);
+        }
+
+        private void SaveFileList()
+        {
+            var filePaths = new List<string>();
+            foreach (ApkFileItem item in fileListBox.Items)
+            {
+                if (File.Exists(item.FilePath))
+                {
+                    filePaths.Add(item.FilePath);
+                }
+            }
+
+            if (filePaths.Count > 0)
+            {
+                _config["FileList"] = string.Join("|", filePaths);
+            }
+            else
+            {
+                _config.Remove("FileList");
+            }
+        }
+
+        private void SaveKeystoreCache()
+        {
+            // Remove old keystore cache entries
+            var keysToRemove = _config.Keys.Where(k => k.StartsWith("KeystoreCache_")).ToList();
+            foreach (var key in keysToRemove)
+            {
+                _config.Remove(key);
+            }
+
+            // Save new keystore cache entries
+            foreach (var kvp in _keystoreCache)
+            {
+                string aabPath = kvp.Key;
+                var keystoreInfo = kvp.Value;
+
+                // Build value string: keystorePath|alias|password|useDebug|saveCredentials
+                string value;
+                if (keystoreInfo.SaveCredentials)
+                {
+                    // Save full info including credentials
+                    value = $"{keystoreInfo.KeystorePath}|{keystoreInfo.Alias ?? ""}|{keystoreInfo.Password ?? ""}|{(keystoreInfo.UseDebugKeystore ? "1" : "0")}|1";
+                }
+                else
+                {
+                    // Save only keystore path
+                    value = $"{keystoreInfo.KeystorePath}|||{(keystoreInfo.UseDebugKeystore ? "1" : "0")}|0";
+                }
+
+                _config[$"KeystoreCache_{aabPath}"] = value;
+            }
         }
 
         public void SaveConfiguration()
@@ -154,9 +300,12 @@ namespace AndroidIntelliTool
                 apkPath = _config["LastApkPath"];
             }
 
-            if (apkPath != null)
+            if (apkPath != null && (apkPath.EndsWith(".apk", StringComparison.OrdinalIgnoreCase) || apkPath.EndsWith(".aab", StringComparison.OrdinalIgnoreCase)))
             {
-                await ProcessApkFile(apkPath);
+                // Add to list and process
+                var item = new ApkFileItem { FilePath = apkPath };
+                fileListBox.Items.Add(item);
+                await ProcessApkFileInfo(apkPath);
             }
         }
 
@@ -164,37 +313,274 @@ namespace AndroidIntelliTool
 
         #region Main Tab UI Handlers
 
-        private async Task SelectApkFile()
+        private async Task InstallApk()
         {
-            using (var openFileDialog = new OpenFileDialog())
+            // Get selected file from list
+            if (fileListBox.SelectedItem == null)
             {
-                openFileDialog.Filter = "Android Packages (*.apk;*.aab)|*.apk;*.aab|All files (*.*)|*.*";
-                if (openFileDialog.ShowDialog() == DialogResult.OK)
+                MessageBox.Show("Please select a file from the list first.", "No File Selected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            string device = deviceComboBox.SelectedItem as string;
+            if (string.IsNullOrEmpty(device))
+            {
+                MessageBox.Show("Please select a device first.", "No Device", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            var selectedItem = (ApkFileItem)fileListBox.SelectedItem;
+            string filePath = selectedItem.FilePath;
+
+            if (!File.Exists(filePath))
+            {
+                MessageBox.Show($"File not found: {filePath}", "File Not Found", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            outputTextBox.Text = $"Installing {Path.GetFileName(filePath)} on {device}...\n";
+
+            // Check if file is AAB
+            if (filePath.EndsWith(".aab", StringComparison.OrdinalIgnoreCase))
+            {
+                await InstallAabFromList(device, filePath);
+            }
+            else if (filePath.EndsWith(".apk", StringComparison.OrdinalIgnoreCase))
+            {
+                // Standard APK installation
+                string arguments = $"-s {device} install -r -d \"{filePath}\"";
+                var (output, exitCode) = await RunCommandAsync(_config["adb"], arguments);
+                if (exitCode != 0)
                 {
-                    await ProcessApkFile(openFileDialog.FileName);
+                    outputTextBox.AppendText($"\nError installing APK: {output}");
+                }
+                else
+                {
+                    outputTextBox.AppendText("Success!\n");
+                    await RunAppCommand("Launching", "shell monkey -p {{pkg}} -c android.intent.category.LAUNCHER 1");
+                }
+            }
+            else
+            {
+                MessageBox.Show("Only APK and AAB files can be installed.", "Invalid File Type", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+        }
+
+        private async Task InstallAab(string device, string aabPath)
+        {
+            // Check if bundletool is configured
+            if (!IsBundletoolConfigured(out string errorMessage))
+            {
+                MessageBox.Show(errorMessage, "Bundletool Required", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                outputTextBox.AppendText($"\n{errorMessage}");
+                return;
+            }
+
+            try
+            {
+                // Create temporary APKS file
+                string apksPath = Path.Combine(Path.GetTempPath(), $"{Path.GetFileNameWithoutExtension(aabPath)}_{DateTime.Now.Ticks}.apks");
+
+                outputTextBox.AppendText("Building APKs from AAB...\n");
+
+                // Build APKS from AAB
+                string buildArgs = $"-jar \"{_config["bundletool"]}\" build-apks --bundle=\"{aabPath}\" --output=\"{apksPath}\" --mode=default --ks-pass=pass:android --ks-key-alias=androiddebugkey";
+                var (buildOutput, buildExitCode) = await RunCommandAsync("java", buildArgs);
+
+                if (buildExitCode != 0)
+                {
+                    outputTextBox.AppendText($"\nError building APKs: {buildOutput}");
+                    return;
+                }
+
+                outputTextBox.AppendText("Installing APKs to device...\n");
+
+                // Install APKS to device
+                string installArgs = $"-jar \"{_config["bundletool"]}\" install-apks --apks=\"{apksPath}\" --device-id={device} --adb=\"{_config["adb"]}\"";
+                var (installOutput, installExitCode) = await RunCommandAsync("java", installArgs);
+
+                // Clean up temporary file
+                if (File.Exists(apksPath))
+                {
+                    File.Delete(apksPath);
+                }
+
+                if (installExitCode != 0)
+                {
+                    outputTextBox.AppendText($"\nError installing AAB: {installOutput}");
+                }
+                else
+                {
+                    outputTextBox.AppendText("Success!\n");
+                    await RunAppCommand("Launching", "shell monkey -p {{pkg}} -c android.intent.category.LAUNCHER 1");
+                }
+            }
+            catch (Exception ex)
+            {
+                outputTextBox.AppendText($"\nError installing AAB: {ex.Message}");
+            }
+        }
+
+        private async Task ExtractSignedApks()
+        {
+            // Get selected file from list
+            if (fileListBox.SelectedItem == null)
+            {
+                MessageBox.Show("Please select an AAB file from the list first.", "No File Selected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            var selectedItem = (ApkFileItem)fileListBox.SelectedItem;
+            string filePath = selectedItem.FilePath;
+
+            if (!File.Exists(filePath))
+            {
+                MessageBox.Show($"File not found: {filePath}", "File Not Found", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            if (!filePath.EndsWith(".aab", StringComparison.OrdinalIgnoreCase))
+            {
+                MessageBox.Show("Please select an AAB file to extract APKs.", "Invalid File Type", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            // Check if bundletool is configured
+            if (!IsBundletoolConfigured(out string errorMessage))
+            {
+                MessageBox.Show(errorMessage, "Bundletool Required", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                outputTextBox.AppendText($"\n{errorMessage}");
+                return;
+            }
+
+            // Get keystore information (cached or new)
+            var keystoreInfo = await GetKeystoreInfo(filePath);
+            if (keystoreInfo == null)
+            {
+                return; // User canceled
+            }
+
+            using (var sfd = new SaveFileDialog())
+            {
+                sfd.Filter = "APK Set Archive (*.apks)|*.apks";
+                sfd.FileName = Path.GetFileNameWithoutExtension(filePath) + "_signed.apks";
+
+                if (sfd.ShowDialog() == DialogResult.OK)
+                {
+                    outputTextBox.Text = "Extracting signed APKs from AAB...\n";
+
+                    try
+                    {
+                        string buildArgs = $"-jar \"{_config["bundletool"]}\" build-apks --bundle=\"{filePath}\" --output=\"{sfd.FileName}\" --mode=default";
+
+                        // Add keystore parameters
+                        buildArgs += $" --ks=\"{keystoreInfo.KeystorePath}\"";
+                        buildArgs += $" --ks-pass=pass:{keystoreInfo.Password}";
+                        buildArgs += $" --ks-key-alias={keystoreInfo.Alias}";
+                        if (!string.IsNullOrEmpty(keystoreInfo.Password))
+                        {
+                            buildArgs += $" --key-pass=pass:{keystoreInfo.Password}";
+                        }
+
+                        var (output, exitCode) = await RunCommandAsync("java", buildArgs);
+
+                        if (exitCode != 0)
+                        {
+                            outputTextBox.AppendText($"\nError extracting signed APKs: {output}");
+                        }
+                        else
+                        {
+                            outputTextBox.AppendText($"\nSigned APKs successfully extracted to:\n{sfd.FileName}");
+                            ShowMessageBoxWithOpenFile($"Signed APKs successfully extracted!", "Success", sfd.FileName);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        outputTextBox.AppendText($"\nError: {ex.Message}");
+                    }
                 }
             }
         }
 
-        private async Task InstallApk()
+        private async Task ExtractUniversalApk()
         {
-            string device = deviceComboBox.SelectedItem as string;
-            if (string.IsNullOrEmpty(device)) { MessageBox.Show("Please select a device."); return; }
-
-            string filePath = apkPathTextBox.Text;
-            if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath)) { MessageBox.Show("Please select a valid file."); return; }
-
-            outputTextBox.Text = $"Installing {Path.GetFileName(filePath)} on {device}...\n";
-            string arguments = $"-s {device} install -r -d \"{filePath}\"";
-            var (output, exitCode) = await RunCommandAsync(_config["adb"], arguments);
-            if (exitCode != 0)
+            // Get selected file from list
+            if (fileListBox.SelectedItem == null)
             {
-                outputTextBox.AppendText($"\nError installing APK: {output}");
+                MessageBox.Show("Please select an AAB file from the list first.", "No File Selected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
             }
-            else
+
+            var selectedItem = (ApkFileItem)fileListBox.SelectedItem;
+            string filePath = selectedItem.FilePath;
+
+            if (!File.Exists(filePath))
             {
-                outputTextBox.AppendText("Success!\n");
-                await RunAppCommand("Launching", "shell monkey -p {{pkg}} -c android.intent.category.LAUNCHER 1");
+                MessageBox.Show($"File not found: {filePath}", "File Not Found", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            if (!filePath.EndsWith(".aab", StringComparison.OrdinalIgnoreCase))
+            {
+                MessageBox.Show("Please select an AAB file to extract universal APK.", "Invalid File Type", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            // Check if bundletool is configured
+            if (!IsBundletoolConfigured(out string errorMessage))
+            {
+                MessageBox.Show(errorMessage, "Bundletool Required", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                outputTextBox.AppendText($"\n{errorMessage}");
+                return;
+            }
+
+            // Get keystore information (cached or new)
+            var keystoreInfo = await GetKeystoreInfo(filePath);
+            if (keystoreInfo == null)
+            {
+                return; // User canceled
+            }
+
+            using (var sfd = new SaveFileDialog())
+            {
+                sfd.Filter = "APK Set Archive (*.apks)|*.apks";
+                sfd.FileName = Path.GetFileNameWithoutExtension(filePath) + "_universal.apks";
+
+                if (sfd.ShowDialog() == DialogResult.OK)
+                {
+                    outputTextBox.Text = "Extracting universal APK from AAB...\n";
+
+                    try
+                    {
+                        string buildArgs = $"-jar \"{_config["bundletool"]}\" build-apks --bundle=\"{filePath}\" --output=\"{sfd.FileName}\" --mode=universal";
+
+                        // Add keystore parameters
+                        buildArgs += $" --ks=\"{keystoreInfo.KeystorePath}\"";
+                        buildArgs += $" --ks-pass=pass:{keystoreInfo.Password}";
+                        buildArgs += $" --ks-key-alias={keystoreInfo.Alias}";
+                        if (!string.IsNullOrEmpty(keystoreInfo.Password))
+                        {
+                            buildArgs += $" --key-pass=pass:{keystoreInfo.Password}";
+                        }
+
+                        var (output, exitCode) = await RunCommandAsync("java", buildArgs);
+
+                        if (exitCode != 0)
+                        {
+                            outputTextBox.AppendText($"\nError extracting universal APK: {output}");
+                        }
+                        else
+                        {
+                            outputTextBox.AppendText($"\nUniversal APK successfully extracted to:\n{sfd.FileName}");
+                            outputTextBox.AppendText("\n\nNote: The .apks file is a ZIP archive. Extract it to get the universal.apk file.");
+                            ShowMessageBoxWithOpenFile($"Universal APK successfully extracted!\n\nNote: The .apks file is a ZIP archive.\nExtract it to get the universal.apk file.", "Success", sfd.FileName);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        outputTextBox.AppendText($"\nError: {ex.Message}");
+                    }
+                }
             }
         }
 
@@ -425,15 +811,58 @@ namespace AndroidIntelliTool
 
         void Form1_DragEnter(object sender, DragEventArgs e)
         {
-            if (e.Data.GetDataPresent(DataFormats.FileDrop)) e.Effect = DragDropEffects.Copy;
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+                bool hasValidFile = false;
+                foreach (string file in files)
+                {
+                    string ext = Path.GetExtension(file).ToLower();
+                    if (ext == ".apk" || ext == ".aab")
+                    {
+                        hasValidFile = true;
+                        break;
+                    }
+                }
+                e.Effect = hasValidFile ? DragDropEffects.Copy : DragDropEffects.None;
+            }
         }
 
         async void Form1_DragDrop(object sender, DragEventArgs e)
         {
-            string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
-            if (files.Length > 0 && (files[0].EndsWith(".apk") || files[0].EndsWith(".aab")))
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
-                await ProcessApkFile(files[0]);
+                string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+                foreach (string filePath in files)
+                {
+                    string ext = Path.GetExtension(filePath).ToLower();
+                    if ((ext == ".apk" || ext == ".aab") && File.Exists(filePath))
+                    {
+                        var item = new ApkFileItem { FilePath = filePath };
+
+                        // Check if already in list
+                        bool alreadyExists = false;
+                        foreach (ApkFileItem existingItem in fileListBox.Items)
+                        {
+                            if (existingItem.FilePath.Equals(filePath, StringComparison.OrdinalIgnoreCase))
+                            {
+                                alreadyExists = true;
+                                break;
+                            }
+                        }
+
+                        if (!alreadyExists)
+                        {
+                            fileListBox.Items.Add(item);
+                        }
+
+                        // Auto-process first file for package info
+                        if (!alreadyExists && fileListBox.Items.Count == 1)
+                        {
+                            await ProcessApkFileInfo(filePath);
+                        }
+                    }
+                }
             }
         }
 
@@ -441,9 +870,34 @@ namespace AndroidIntelliTool
 
         #region Core Logic
 
-        private async Task ProcessApkFile(string filePath)
+        private bool IsBundletoolConfigured(out string message)
         {
-            apkPathTextBox.Text = filePath;
+            if (!_config.ContainsKey("bundletool"))
+            {
+                message = "Bundletool path is not set in configuration.\nPlease configure it in Tools -> Settings.";
+                return false;
+            }
+
+            string bundletoolPath = _config["bundletool"]?.Trim();
+
+            if (string.IsNullOrWhiteSpace(bundletoolPath))
+            {
+                message = "Bundletool path is empty.\nPlease configure it in Tools -> Settings.";
+                return false;
+            }
+
+            if (!File.Exists(bundletoolPath))
+            {
+                message = $"Bundletool file not found at:\n{bundletoolPath}\n\nPlease check the path in Tools -> Settings.";
+                return false;
+            }
+
+            message = null;
+            return true;
+        }
+
+        private async Task ProcessApkFileInfo(string filePath)
+        {
             var (pkg, version) = await GetApkInfo(filePath);
             packageNameTextBox.Text = pkg;
             apkVersionLabel.Text = $"Version: {version}";
@@ -453,20 +907,60 @@ namespace AndroidIntelliTool
 
         private async Task<(string, string)> GetApkInfo(string apkPath)
         {
-            var (output, exitCode) = await RunCommandAsync(_config["aapt2"], $"dump badging \"{apkPath}\"");
-            if (exitCode != 0)
+            string output;
+            int exitCode;
+
+            // Check if file is AAB
+            if (apkPath.EndsWith(".aab", StringComparison.OrdinalIgnoreCase))
             {
-                outputTextBox.AppendText("\nCould not get package info: " + output);
-                return (null, null);
+                // For AAB files, use bundletool to get info
+                if (!IsBundletoolConfigured(out string errorMessage))
+                {
+                    outputTextBox.AppendText($"\n{errorMessage}");
+                    return ("AAB file (bundletool required)", "---");
+                }
+
+                // Use bundletool to dump manifest
+                var dumpResult = await RunCommandAsync("java", $"-jar \"{_config["bundletool"]}\" dump manifest --bundle=\"{apkPath}\"");
+                output = dumpResult.output;
+                exitCode = dumpResult.exitCode;
+
+                if (exitCode != 0)
+                {
+                    outputTextBox.AppendText("\nCould not get AAB info: " + output);
+                    return (null, null);
+                }
+
+                // Parse XML manifest to get package name and version
+                var pkgMatch = Regex.Match(output, "package=\"([^\"]+)\"");
+                var versionMatch = Regex.Match(output, "android:versionName=\"([^\"]+)\"");
+
+                string pkg = pkgMatch.Success ? pkgMatch.Groups[1].Value : "not found";
+                string version = versionMatch.Success ? versionMatch.Groups[1].Value : "---";
+
+                return (pkg, version);
             }
+            else
+            {
+                // For APK files, use aapt2
+                var result = await RunCommandAsync(_config["aapt2"], $"dump badging \"{apkPath}\"");
+                output = result.output;
+                exitCode = result.exitCode;
 
-            var pkgMatch = Regex.Match(output, "package: name='([^']+)'");
-            var versionMatch = Regex.Match(output, "versionName='([^']+)'");
+                if (exitCode != 0)
+                {
+                    outputTextBox.AppendText("\nCould not get package info: " + output);
+                    return (null, null);
+                }
 
-            string pkg = pkgMatch.Success ? pkgMatch.Groups[1].Value : "not found";
-            string version = versionMatch.Success ? versionMatch.Groups[1].Value : "---";
+                var pkgMatch = Regex.Match(output, "package: name='([^']+)'");
+                var versionMatch = Regex.Match(output, "versionName='([^']+)'");
 
-            return (pkg, version);
+                string pkg = pkgMatch.Success ? pkgMatch.Groups[1].Value : "not found";
+                string version = versionMatch.Success ? versionMatch.Groups[1].Value : "---";
+
+                return (pkg, version);
+            }
         }
 
         private async Task RunAppCommand(string action, params string[] adbCommands)
@@ -664,6 +1158,249 @@ namespace AndroidIntelliTool
 
             Process.Start(scrcpyPath, arguments);
         }
+
+        #region File List Management
+
+        private void AddFileToList()
+        {
+            using (var ofd = new OpenFileDialog())
+            {
+                ofd.Filter = "APK/AAB files (*.apk;*.aab)|*.apk;*.aab|All files (*.*)|*.*";
+                ofd.Multiselect = true;
+
+                if (ofd.ShowDialog() == DialogResult.OK)
+                {
+                    foreach (string filePath in ofd.FileNames)
+                    {
+                        if (File.Exists(filePath))
+                        {
+                            var item = new ApkFileItem { FilePath = filePath };
+
+                            // Check if already in list
+                            bool alreadyExists = false;
+                            foreach (ApkFileItem existingItem in fileListBox.Items)
+                            {
+                                if (existingItem.FilePath.Equals(filePath, StringComparison.OrdinalIgnoreCase))
+                                {
+                                    alreadyExists = true;
+                                    break;
+                                }
+                            }
+
+                            if (!alreadyExists)
+                            {
+                                fileListBox.Items.Add(item);
+                            }
+                        }
+                    }
+
+                    // Save config after adding files
+                    SaveConfig();
+                }
+            }
+        }
+
+        private void RemoveSelectedFileFromList()
+        {
+            if (fileListBox.SelectedItem != null)
+            {
+                fileListBox.Items.Remove(fileListBox.SelectedItem);
+
+                // Save config after removing file
+                SaveConfig();
+            }
+        }
+
+        private async Task OnFileListSelectionChanged()
+        {
+            if (fileListBox.SelectedItem == null)
+                return;
+
+            var selectedItem = (ApkFileItem)fileListBox.SelectedItem;
+            string filePath = selectedItem.FilePath;
+
+            if (File.Exists(filePath))
+            {
+                await ProcessApkFileInfo(filePath);
+            }
+        }
+
+        private void FileListBox_DragEnter(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+                bool hasValidFile = false;
+
+                foreach (string file in files)
+                {
+                    string ext = Path.GetExtension(file).ToLower();
+                    if (ext == ".apk" || ext == ".aab")
+                    {
+                        hasValidFile = true;
+                        break;
+                    }
+                }
+
+                e.Effect = hasValidFile ? DragDropEffects.Copy : DragDropEffects.None;
+            }
+        }
+
+        private void FileListBox_DragDrop(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+
+                foreach (string filePath in files)
+                {
+                    string ext = Path.GetExtension(filePath).ToLower();
+                    if ((ext == ".apk" || ext == ".aab") && File.Exists(filePath))
+                    {
+                        var item = new ApkFileItem { FilePath = filePath };
+
+                        // Check if already in list
+                        bool alreadyExists = false;
+                        foreach (ApkFileItem existingItem in fileListBox.Items)
+                        {
+                            if (existingItem.FilePath.Equals(filePath, StringComparison.OrdinalIgnoreCase))
+                            {
+                                alreadyExists = true;
+                                break;
+                            }
+                        }
+
+                        if (!alreadyExists)
+                        {
+                            fileListBox.Items.Add(item);
+                        }
+                    }
+                }
+            }
+        }
+
+        private async Task<KeystoreInfo> GetKeystoreInfo(string aabPath)
+        {
+            // Check if we have cached info for this AAB
+            if (_keystoreCache.ContainsKey(aabPath))
+            {
+                var cachedInfo = _keystoreCache[aabPath];
+
+                // Show KeystoreForm with cached values as defaults
+                using (var keystoreForm = new KeystoreForm(cachedInfo))
+                {
+                    if (keystoreForm.ShowDialog() == DialogResult.OK)
+                    {
+                        var newInfo = new KeystoreInfo
+                        {
+                            KeystorePath = keystoreForm.KeystorePath,
+                            Alias = keystoreForm.KeyAlias,
+                            Password = keystoreForm.KeyPassword,
+                            UseDebugKeystore = keystoreForm.KeystorePath.Contains("debug.keystore"),
+                            SaveCredentials = keystoreForm.SaveCredentials
+                        };
+
+                        // Update cache
+                        _keystoreCache[aabPath] = newInfo;
+                        SaveConfig(); // Save to persist keystore cache
+                        return newInfo;
+                    }
+                    else
+                    {
+                        return null;
+                    }
+                }
+            }
+            else
+            {
+                // No cached info, show empty form
+                using (var keystoreForm = new KeystoreForm())
+                {
+                    if (keystoreForm.ShowDialog() == DialogResult.OK)
+                    {
+                        var newInfo = new KeystoreInfo
+                        {
+                            KeystorePath = keystoreForm.KeystorePath,
+                            Alias = keystoreForm.KeyAlias,
+                            Password = keystoreForm.KeyPassword,
+                            UseDebugKeystore = keystoreForm.KeystorePath.Contains("debug.keystore"),
+                            SaveCredentials = keystoreForm.SaveCredentials
+                        };
+
+                        // Cache for future use
+                        _keystoreCache[aabPath] = newInfo;
+                        SaveConfig(); // Save to persist keystore cache
+                        return newInfo;
+                    }
+                    else
+                    {
+                        return null;
+                    }
+                }
+            }
+        }
+
+        private async Task InstallAabFromList(string device, string aabPath)
+        {
+            if (!IsBundletoolConfigured(out string errorMessage))
+            {
+                MessageBox.Show(errorMessage, "Bundletool Required", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                outputTextBox.AppendText($"\n{errorMessage}");
+                return;
+            }
+
+            var keystoreInfo = await GetKeystoreInfo(aabPath);
+            if (keystoreInfo == null)
+            {
+                return; // User canceled
+            }
+
+            try
+            {
+                string apksPath = Path.Combine(Path.GetTempPath(), $"{Path.GetFileNameWithoutExtension(aabPath)}_{DateTime.Now.Ticks}.apks");
+                outputTextBox.AppendText($"\nBuilding APKs from AAB: {Path.GetFileName(aabPath)}...");
+
+                string buildArgs = $"-jar \"{_config["bundletool"]}\" build-apks --bundle=\"{aabPath}\" --output=\"{apksPath}\" --mode=default";
+
+                // Add keystore info
+                buildArgs += $" --ks=\"{keystoreInfo.KeystorePath}\" --ks-pass=pass:{keystoreInfo.Password} --ks-key-alias={keystoreInfo.Alias}";
+
+                var (buildOutput, buildExitCode) = await RunCommandAsync("java", buildArgs);
+
+                if (buildExitCode != 0)
+                {
+                    outputTextBox.AppendText($"\nError building APKs: {buildOutput}");
+                    return;
+                }
+
+                outputTextBox.AppendText("\nInstalling APKs to device...");
+                string installArgs = $"-jar \"{_config["bundletool"]}\" install-apks --apks=\"{apksPath}\" --device-id={device} --adb=\"{_config["adb"]}\"";
+                var (installOutput, installExitCode) = await RunCommandAsync("java", installArgs);
+
+                if (File.Exists(apksPath))
+                    File.Delete(apksPath);
+
+                if (installExitCode == 0)
+                {
+                    outputTextBox.AppendText($"\nSuccessfully installed {Path.GetFileName(aabPath)}");
+
+                    // Launch the app
+                    await RunAppCommand("Launching", "shell monkey -p {{pkg}} -c android.intent.category.LAUNCHER 1");
+                }
+                else
+                {
+                    outputTextBox.AppendText($"\nError installing: {installOutput}");
+                    MessageBox.Show($"Installation failed:\n{installOutput}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                outputTextBox.AppendText($"\nError: {ex.Message}");
+                MessageBox.Show($"Error: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        #endregion
 
         #endregion
     }

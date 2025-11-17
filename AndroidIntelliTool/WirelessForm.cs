@@ -81,11 +81,26 @@ namespace AndroidIntelliTool
             if (string.IsNullOrWhiteSpace(ip)) return;
 
             var (output, error) = await RunCommandAsync(_adbPath, $"connect {ip}");
-            if (!string.IsNullOrEmpty(error) && !output.Contains("already connected"))
-            {
-                MessageBox.Show($"Failed to connect to {ip}:\n{error}", "Connection Failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-            else
+
+            // Normalize output (trim whitespace and convert to lowercase for checking)
+            string outputLower = output?.Trim().ToLower() ?? "";
+            string errorLower = error?.Trim().ToLower() ?? "";
+
+            // Check if connection was successful - be VERY strict
+            // Only consider it success if we explicitly see these messages
+            bool isConnected = outputLower.Contains("connected to") || outputLower.Contains("already connected");
+
+            // Check for various failure patterns
+            bool isFailed = outputLower.Contains("failed") ||
+                           outputLower.Contains("cannot connect") ||
+                           outputLower.Contains("connection refused") ||
+                           outputLower.Contains("no route to host") ||
+                           outputLower.Contains("unable to connect") ||
+                           errorLower.Contains("failed") ||
+                           errorLower.Contains("error");
+
+            // If EXPLICITLY connected, show success
+            if (isConnected)
             {
                 MessageBox.Show($"Successfully connected to {ip}.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 if (!_savedIps.Contains(ip))
@@ -97,6 +112,17 @@ namespace AndroidIntelliTool
                 }
                 this.DialogResult = DialogResult.OK;
                 this.Close();
+            }
+            // If explicitly failed, show error
+            else if (isFailed)
+            {
+                string errorMsg = !string.IsNullOrEmpty(output) ? output : error;
+                MessageBox.Show($"Failed to connect to {ip}:\n\n{errorMsg}", "Connection Failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            // Otherwise, we don't know what happened - probably failed
+            else
+            {
+                MessageBox.Show($"Unable to determine connection status for {ip}.\n\nThis usually means the connection failed.\n\nPlease check that:\n- The device is on the same network\n- Wireless debugging is enabled on the device\n- The IP address is correct", "Connection Status Unknown", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
 

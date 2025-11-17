@@ -38,7 +38,10 @@ namespace AndroidIntelliTool
             this.autoScrollCheckBox = new System.Windows.Forms.CheckBox();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.pidStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
+            this.statsLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.copyButton = new System.Windows.Forms.Button();
+            this.pauseButton = new System.Windows.Forms.Button();
+            this.searchButton = new System.Windows.Forms.Button();
             this.statusStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -205,36 +208,64 @@ namespace AndroidIntelliTool
             this.autoScrollCheckBox.TabIndex = 14;
             this.autoScrollCheckBox.Text = "Auto-scroll";
             this.autoScrollCheckBox.UseVisualStyleBackColor = true;
-            // 
+            //
             // statusStrip1
-            // 
+            //
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.pidStatusLabel});
+            this.pidStatusLabel,
+            this.statsLabel});
             this.statusStrip1.Location = new System.Drawing.Point(0, 428);
             this.statusStrip1.Name = "statusStrip1";
             this.statusStrip1.Size = new System.Drawing.Size(784, 22);
             this.statusStrip1.TabIndex = 15;
             this.statusStrip1.Text = "statusStrip1";
-            // 
+            //
             // pidStatusLabel
-            // 
+            //
             this.pidStatusLabel.Name = "pidStatusLabel";
             this.pidStatusLabel.Size = new System.Drawing.Size(0, 17);
-            // 
+            //
+            // statsLabel
+            //
+            this.statsLabel.Name = "statsLabel";
+            this.statsLabel.Size = new System.Drawing.Size(0, 17);
+            this.statsLabel.Spring = true;
+            this.statsLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            //
             // copyButton
-            // 
+            //
             this.copyButton.Location = new System.Drawing.Point(603, 49);
             this.copyButton.Name = "copyButton";
             this.copyButton.Size = new System.Drawing.Size(75, 23);
             this.copyButton.TabIndex = 16;
             this.copyButton.Text = "Copy";
             this.copyButton.UseVisualStyleBackColor = true;
+            //
+            // pauseButton
+            //
+            this.pauseButton.Location = new System.Drawing.Point(603, 10);
+            this.pauseButton.Name = "pauseButton";
+            this.pauseButton.Size = new System.Drawing.Size(75, 23);
+            this.pauseButton.TabIndex = 17;
+            this.pauseButton.Text = "Pause";
+            this.pauseButton.UseVisualStyleBackColor = true;
+            //
+            // searchButton
+            //
+            this.searchButton.Location = new System.Drawing.Point(688, 10);
+            this.searchButton.Name = "searchButton";
+            this.searchButton.Size = new System.Drawing.Size(92, 23);
+            this.searchButton.TabIndex = 18;
+            this.searchButton.Text = "Search (Ctrl+F)";
+            this.searchButton.UseVisualStyleBackColor = true;
             // 
             // LogcatForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(784, 450);
+            this.Controls.Add(this.searchButton);
+            this.Controls.Add(this.pauseButton);
             this.Controls.Add(this.copyButton);
             this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.pidFilterButton);
@@ -283,6 +314,9 @@ namespace AndroidIntelliTool
         private System.Windows.Forms.CheckBox autoScrollCheckBox;
         private System.Windows.Forms.StatusStrip statusStrip1;
         private System.Windows.Forms.ToolStripStatusLabel pidStatusLabel;
+        private System.Windows.Forms.ToolStripStatusLabel statsLabel;
         private System.Windows.Forms.Button copyButton;
+        private System.Windows.Forms.Button pauseButton;
+        private System.Windows.Forms.Button searchButton;
     }
 }
