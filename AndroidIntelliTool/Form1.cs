@@ -79,6 +79,7 @@ namespace AndroidIntelliTool
             // File list handlers
             addToListButton.Click += (s, ev) => AddFileToList();
             removeFromListButton.Click += (s, ev) => RemoveSelectedFileFromList();
+            fileListBox.SelectedIndexChanged += async (s, ev) => await OnFileListSelectionChanged();
             fileListBox.DragEnter += FileListBox_DragEnter;
             fileListBox.DragDrop += FileListBox_DragDrop;
             fileListBox.AllowDrop = true;
@@ -1089,6 +1090,20 @@ namespace AndroidIntelliTool
             if (fileListBox.SelectedItem != null)
             {
                 fileListBox.Items.Remove(fileListBox.SelectedItem);
+            }
+        }
+
+        private async Task OnFileListSelectionChanged()
+        {
+            if (fileListBox.SelectedItem == null)
+                return;
+
+            var selectedItem = (ApkFileItem)fileListBox.SelectedItem;
+            string filePath = selectedItem.FilePath;
+
+            if (File.Exists(filePath))
+            {
+                await ProcessApkFileInfo(filePath);
             }
         }
 
