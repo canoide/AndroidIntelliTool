@@ -1247,6 +1247,9 @@ namespace AndroidIntelliTool
                 {
                     outputTextBox.AppendText($"\nSuccessfully installed {Path.GetFileName(aabPath)}");
                     MessageBox.Show($"AAB installed successfully!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                    // Launch the app
+                    await RunAppCommand("Launching", "shell monkey -p {{pkg}} -c android.intent.category.LAUNCHER 1");
                 }
                 else
                 {
