@@ -19,9 +19,16 @@ namespace AndroidIntelliTool
         private Button btnOk;
         private Button btnCancel;
         private CheckBox checkUseDebugKey;
+        private KeystoreInfo _defaultInfo;
 
-        public KeystoreForm()
+        public KeystoreForm() : this(null)
         {
+        }
+
+        public KeystoreForm(KeystoreInfo defaultInfo)
+        {
+            _defaultInfo = defaultInfo;
+
             InitializeComponent();
             this.Text = "Keystore Information";
             this.Width = 500;
@@ -39,7 +46,7 @@ namespace AndroidIntelliTool
                 Text = "Use Android Debug Keystore",
                 Location = new System.Drawing.Point(20, yPos),
                 Width = 250,
-                Checked = true
+                Checked = defaultInfo?.UseDebugKeystore ?? true
             };
             checkUseDebugKey.CheckedChanged += CheckUseDebugKey_CheckedChanged;
             this.Controls.Add(checkUseDebugKey);
@@ -92,8 +99,20 @@ namespace AndroidIntelliTool
             this.AcceptButton = btnOk;
             this.CancelButton = btnCancel;
 
-            // Set default debug keystore values
-            SetDebugKeystoreDefaults();
+            // Set default values
+            if (_defaultInfo != null && !_defaultInfo.UseDebugKeystore)
+            {
+                // Use cached custom keystore values
+                textKeystorePath.Text = _defaultInfo.KeystorePath ?? "";
+                textKeystorePassword.Text = _defaultInfo.Password ?? "";
+                textKeyAlias.Text = _defaultInfo.Alias ?? "";
+                textKeyPassword.Text = _defaultInfo.Password ?? "";
+            }
+            else
+            {
+                // Set default debug keystore values
+                SetDebugKeystoreDefaults();
+            }
         }
 
         private void InitializeComponent()
@@ -117,10 +136,21 @@ namespace AndroidIntelliTool
             }
             else
             {
-                textKeystorePath.Text = "";
-                textKeystorePassword.Text = "";
-                textKeyAlias.Text = "";
-                textKeyPassword.Text = "";
+                // Use cached values if available, otherwise clear
+                if (_defaultInfo != null && !_defaultInfo.UseDebugKeystore)
+                {
+                    textKeystorePath.Text = _defaultInfo.KeystorePath ?? "";
+                    textKeystorePassword.Text = _defaultInfo.Password ?? "";
+                    textKeyAlias.Text = _defaultInfo.Alias ?? "";
+                    textKeyPassword.Text = _defaultInfo.Password ?? "";
+                }
+                else
+                {
+                    textKeystorePath.Text = "";
+                    textKeystorePassword.Text = "";
+                    textKeyAlias.Text = "";
+                    textKeyPassword.Text = "";
+                }
             }
         }
 
